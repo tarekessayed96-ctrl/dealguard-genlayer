@@ -5,19 +5,31 @@ import { TransactionStatus } from "genlayer-js/types";
 const CONTRACT_ADDRESS =
   "0x23C558dBe1E7c3661492b7C326F9a60161Df03eA";
 
+const provider =
+  window.okxwallet ||
+  window.ethereum;
+
 window.verifyDeal = async function () {
-  const title = document.getElementById("title").value.trim();
-  const description = document.getElementById("description").value.trim();
-  const dealUrl = document.getElementById("dealUrl").value.trim();
-  const secondUrl = document.getElementById("secondUrl").value.trim();
+
+  const title =
+    document.getElementById("title").value.trim();
+
+  const description =
+    document.getElementById("description").value.trim();
+
+  const dealUrl =
+    document.getElementById("dealUrl").value.trim();
+
+  const secondUrl =
+    document.getElementById("secondUrl").value.trim();
 
   if (!title || !description || !dealUrl || !secondUrl) {
     alert("Please complete all fields.");
     return;
   }
 
-  if (!window.ethereum) {
-    alert("Please open DealGuard with a Web3 wallet such as MetaMask.");
+  if (!provider) {
+    alert("Please open DealGuard inside OKX Wallet.");
     return;
   }
 
@@ -27,25 +39,70 @@ window.verifyDeal = async function () {
   button.innerText = "Connecting wallet...";
 
   try {
-    const accounts = await window.ethereum.request({
+
+    // Connect wallet
+    const accounts = await provider.request({
       method: "eth_requestAccounts"
     });
 
     const walletAddress = accounts[0];
 
-    const client = createClient({
+    console.log("Wallet:", walletAddress);
+
+    // Add Studionet if necessary
+    try {
+
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            chainId: "0xf1ef"
+          }
+        ]
+      });
+
+    } catch (switchError) {
+
+      console.log("Network not found. Adding Studionet...");
+
+      await provider.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: "0xf1ef",
+            chainName: "GenLayer Studionet",
+            nativeCurrency: {
+              name: "GEN",
+              symbol: "GEN",
+              decimals: 18
+            },
+            rpcUrls: [
+              "https://studio.genlayer.com/api"
+            ],
+            blockExplorerUrls: [
+              "https://explorer-studio.genlayer.com"
+            ]
+          }
+        ]
+      });
+
+    }
+
+    button.innerText = "Connecting to Studionet...";
+
+    const writeClient = createClient({
       chain: studionet,
       account: walletAddress,
-      provider: window.ethereum
+      provider: provider
     });
 
-    button.innerText = "Connecting to GenLayer...";
-
-    await client.connect("studionet");
+    const readClient = createClient({
+      chain: studionet
+    });
 
     button.innerText = "Verifying with GenLayer...";
 
-    const txHash = await client.writeContract({
+    const txHash = await writeClient.writeContract({
       address: CONTRACT_ADDRESS,
       functionName: "analyze_deal",
       args: [
@@ -59,32 +116,24 @@ window.verifyDeal = async function () {
 
     console.log("Transaction:", txHash);
 
-    button.innerText = "Waiting for GenLayer...";
+    button.innerText = "Waiting for verification...";
 
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      status: TransactionStatus.ACCEPTED
-    });
+    const receipt =
+      await readClient.waitForTransactionReceipt({
+        hash: txHash,
+        status: TransactionStatus.ACCEPTED
+      });
 
     console.log("Receipt:", receipt);
 
-    if (
-      receipt.txExecutionResultName &&
-      receipt.txExecutionResultName !== "FINISHED_WITH_RETURN"
-    ) {
-      throw new Error(
-        "Contract execution did not finish successfully: " +
-        receipt.txExecutionResultName
-      );
-    }
+    button.innerText = "Reading result...";
 
-    button.innerText = "Loading verification...";
-
-    const verification = await client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "get_last_verification",
-      args: []
-    });
+    const verification =
+      await readClient.readContract({
+        address: CONTRACT_ADDRESS,
+        functionName: "get_last_verification",
+        args: []
+      });
 
     console.log("Verification:", verification);
 
@@ -96,6 +145,7 @@ window.verifyDeal = async function () {
           ? JSON.parse(verification)
           : verification;
     } catch {
+
       result = {
         verdict: "UNKNOWN",
         risk_score: 0,
@@ -104,9 +154,11 @@ window.verifyDeal = async function () {
         reasons: [],
         evidence: []
       };
+
     }
 
-    document.getElementById("result").style.display = "block";
+    document.getElementById("result").style.display =
+      "block";
 
     document.getElementById("score").innerText =
       (result.risk_score ?? 0) + "/100";
@@ -131,6 +183,7 @@ window.verifyDeal = async function () {
     button.disabled = false;
 
   } catch (error) {
+
     console.error("DealGuard error:", error);
 
     alert(
