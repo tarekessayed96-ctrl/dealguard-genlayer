@@ -203,73 +203,7 @@
 
   </div>
 
-  <script>
-
-    function verifyDeal() {
-
-      const title =
-        document.getElementById("title").value;
-
-      const description =
-        document.getElementById("description").value;
-
-      const dealUrl =
-        document.getElementById("dealUrl").value;
-
-      const secondUrl =
-        document.getElementById("secondUrl").value;
-
-      if (!title || !description || !dealUrl || !secondUrl) {
-        alert("Please complete all fields.");
-        return;
-      }
-
-      /*
-       * Frontend demonstration layer.
-       *
-       * The next integration step will connect this interface
-       * directly to the deployed DealGuard V6 contract.
-       */
-
-      const result = {
-        verdict: "READY",
-        risk_score: 0,
-        confidence: 0,
-        summary:
-          "Deal submitted. GenLayer verification integration is ready to be connected.",
-        reasons: [
-          "Two independent sources were provided.",
-          "The deal is ready for GenLayer verification."
-        ],
-        evidence: [
-          dealUrl,
-          secondUrl
-        ]
-      };
-
-      document.getElementById("result").style.display = "block";
-
-      document.getElementById("score").innerText =
-        result.risk_score + "/100";
-
-      document.getElementById("verdict").innerText =
-        result.verdict;
-
-      document.getElementById("summary").innerText =
-        result.summary;
-
-      document.getElementById("reasons").innerHTML =
-        result.reasons
-          .map(reason => "<li>" + reason + "</li>")
-          .join("");
-
-      document.getElementById("evidence").innerHTML =
-        result.evidence
-          .map(item => "<li>" + item + "</li>")
-          .join("");
-    }
-
-  </script>
-
+  
+<script type="module" src="./app.js"></script>
 </body>
 </html>
