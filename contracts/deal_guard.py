@@ -1,5 +1,7 @@
-# { "Depends": "py-genlayer:0.1.0" }
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+
 from genlayer import *
+import json
 
 
 class DealGuard(gl.Contract):
@@ -26,10 +28,15 @@ class DealGuard(gl.Contract):
         deal_url: str
     ) -> str:
 
-        task = f"""
-You are DealGuard, an online deal risk analysis system.
+        def analyze() -> str:
+            page = gl.nondet.web.get(deal_url)
+            page_text = page.body.decode("utf-8")
 
-Analyze the deal using the actual webpage content.
+            prompt = f"""
+You are DealGuard, a decentralized deal risk analysis system.
+
+Analyze an online deal using the user's information AND the
+actual webpage content.
 
 DEAL TITLE:
 {title}
@@ -40,7 +47,10 @@ DEAL DESCRIPTION:
 DEAL URL:
 {deal_url}
 
-Identify:
+WEBPAGE CONTENT:
+{page_text[:12000]}
+
+Analyze:
 
 1. Suspicious or unrealistic claims
 2. Missing information
@@ -48,74 +58,64 @@ Identify:
 4. Warranty and return-policy risks
 5. Misleading language
 6. Possible fraud indicators
-7. Contradictions between the user's description and the webpage
+7. Contradictions between the user description and webpage
 8. Important information found on the webpage
 
 Return ONLY valid JSON:
 
 {{
-  "verdict": "SAFE",
-  "risk_score": 0,
-  "summary": "Short explanation",
-  "reasons": [
-    "reason 1",
-    "reason 2",
-    "reason 3"
-  ]
+    "verdict": "SAFE",
+    "risk_score": 0,
+    "summary": "Short explanation",
+    "reasons": [
+        "reason 1",
+        "reason 2",
+        "reason 3"
+    ]
 }}
 
 Rules:
-
-verdict must be exactly one of:
-SAFE
-RISKY
-HIGH_RISK
-
-risk_score must be an integer from 0 to 100.
+- verdict must be SAFE, RISKY, or HIGH_RISK
+- risk_score must be an integer from 0 to 100
+- reasons must be based on available evidence
+- do not invent facts
 """
+
+            result = gl.nondet.exec_prompt(
+                prompt,
+                response_format="json"
+            )
+
+            return json.dumps(result, sort_keys=True)
 
         criteria = """
-The analysis must:
+The result must:
 
-- Be based only on the supplied webpage content and deal information.
-- Identify meaningful risks supported by the evidence.
-- Use a risk_score between 0 and 100.
-- Use exactly SAFE, RISKY, or HIGH_RISK as the verdict.
-- Keep the summary consistent with the evidence.
-- Never invent facts that are not present in the provided information.
+1. Be valid JSON.
+2. Contain verdict, risk_score, summary, and reasons.
+3. Use verdict SAFE, RISKY, or HIGH_RISK.
+4. Use a risk_score from 0 to 100.
+5. Base the assessment on the supplied deal information and webpage.
+6. Avoid inventing facts.
+7. Identify concrete evidence for the risk assessment.
 """
-
-        def get_deal_page():
-            response = gl.nondet.web.get(deal_url)
-            return response.body.decode("utf-8")
-
-        def analyze_page(page_content):
-            prompt = f"""
-{task}
-
-WEBPAGE CONTENT:
-{page_content[:12000]}
-"""
-            return gl.nondet.exec_prompt(prompt)
-
-        def analyze():
-            page_content = get_deal_page()
-            return analyze_page(page_content)
 
         result = gl.eq_principle.prompt_non_comparative(
             analyze,
-            task=task,
+            task="Analyze the online deal and return a valid DealGuard risk assessment.",
             criteria=criteria
         )
+
+        parsed = json.loads(result)
 
         self.last_title = title
         self.last_description = description
         self.last_url = deal_url
-        self.last_verdict = result["verdict"]
-        self.last_risk_score = result["risk_score"]
-        self.last_analysis = str(result)
+        self.last_verdict = parsed["verdict"]
+        self.last_risk_score = parsed["risk_score"]
+        self.last_analysis = result
 
-        return self.last_analysis
+        return result
 
     @gl.public.view
     def get_last_verification(self) -> str:
