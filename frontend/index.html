@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealGuard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: #ffffff;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      color: #aab3c5;
+      font-size: 18px;
+    }
+
+    .card {
+      background: #151c30;
+      border: 1px solid #29334d;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 18px;
+      border-radius: 9px;
+      border: 1px solid #35415f;
+      background: #0d1425;
+      color: white;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #0b1020;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .result {
+      display: none;
+    }
+
+    .score {
+      font-size: 52px;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+
+    .verdict {
+      font-size: 25px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .section {
+      margin-top: 20px;
+    }
+
+    .section h3 {
+      margin-bottom: 10px;
+    }
+
+    .section ul {
+      padding-left: 20px;
+      color: #c5cede;
+    }
+
+    .section li {
+      margin-bottom: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      color: #6f7b91;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="hero">
+      <h1>🛡️ DealGuard</h1>
+      <p>
+        Verify online deals before you trust them.
+      </p>
+    </div>
+
+    <div class="card">
+
+      <label>Deal Title</label>
+      <input
+        id="title"
+        placeholder="Example: iPhone 17 Pro for $499"
+      >
+
+      <label>Description</label>
+      <textarea
+        id="description"
+        placeholder="Describe the offer..."
+      ></textarea>
+
+      <label>Deal URL</label>
+      <input
+        id="dealUrl"
+        placeholder="https://example.com/product"
+      >
+
+      <label>Second Source URL</label>
+      <input
+        id="secondUrl"
+        placeholder="https://example.com/another-source"
+      >
+
+      <button onclick="verifyDeal()">
+        Verify Deal
+      </button>
+
+    </div>
+
+    <div id="result" class="card result">
+
+      <h2>Verification Report</h2>
+
+      <div class="score" id="score">
+        --
+      </div>
+
+      <div class="verdict" id="verdict">
+        --
+      </div>
+
+      <p id="summary"></p>
+
+      <div class="section">
+        <h3>Reasons</h3>
+        <ul id="reasons"></ul>
+      </div>
+
+      <div class="section">
+        <h3>Evidence</h3>
+        <ul id="evidence"></ul>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      Powered by GenLayer Intelligent Contracts
+    </div>
+
+  </div>
+
+  <script>
+
+    function verifyDeal() {
+
+      const title =
+        document.getElementById("title").value;
+
+      const description =
+        document.getElementById("description").value;
+
+      const dealUrl =
+        document.getElementById("dealUrl").value;
+
+      const secondUrl =
+        document.getElementById("secondUrl").value;
+
+      if (!title || !description || !dealUrl || !secondUrl) {
+        alert("Please complete all fields.");
+        return;
+      }
+
+      /*
+       * Frontend demonstration layer.
+       *
+       * The next integration step will connect this interface
+       * directly to the deployed DealGuard V6 contract.
+       */
+
+      const result = {
+        verdict: "READY",
+        risk_score: 0,
+        confidence: 0,
+        summary:
+          "Deal submitted. GenLayer verification integration is ready to be connected.",
+        reasons: [
+          "Two independent sources were provided.",
+          "The deal is ready for GenLayer verification."
+        ],
+        evidence: [
+          dealUrl,
+          secondUrl
+        ]
+      };
+
+      document.getElementById("result").style.display = "block";
+
+      document.getElementById("score").innerText =
+        result.risk_score + "/100";
+
+      document.getElementById("verdict").innerText =
+        result.verdict;
+
+      document.getElementById("summary").innerText =
+        result.summary;
+
+      document.getElementById("reasons").innerHTML =
+        result.reasons
+          .map(reason => "<li>" + reason + "</li>")
+          .join("");
+
+      document.getElementById("evidence").innerHTML =
+        result.evidence
+          .map(item => "<li>" + item + "</li>")
+          .join("");
+    }
+
+  </script>
+
+</body>
+</html>
