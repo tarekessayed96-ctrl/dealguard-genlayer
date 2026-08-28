@@ -25,10 +25,10 @@ class DealGuard(gl.Contract):
         deal_url: str
     ) -> str:
 
-        prompt = f"""
-You are DealGuard, an AI-powered deal risk analysis system.
+        task = f"""
+You are DealGuard, an online deal risk analysis system.
 
-Analyze the following online deal.
+Analyze the deal using the actual webpage content.
 
 DEAL TITLE:
 {title}
@@ -39,7 +39,7 @@ DEAL DESCRIPTION:
 DEAL URL:
 {deal_url}
 
-Evaluate:
+Identify:
 
 1. Suspicious or unrealistic claims
 2. Missing information
@@ -47,7 +47,8 @@ Evaluate:
 4. Warranty and return-policy risks
 5. Misleading language
 6. Possible fraud indicators
-7. Contradictions in the provided information
+7. Contradictions between the user's description and the webpage
+8. Important information found on the webpage
 
 Return ONLY valid JSON:
 
@@ -62,15 +63,49 @@ Return ONLY valid JSON:
   ]
 }}
 
-The verdict MUST be exactly one of:
+Rules:
+
+verdict must be exactly one of:
 SAFE
 RISKY
 HIGH_RISK
 
-The risk_score MUST be an integer from 0 to 100.
+risk_score must be an integer from 0 to 100.
 """
 
-        result = gl.nondet.exec_prompt(prompt)
+        criteria = """
+The analysis must:
+
+- Be based only on the supplied webpage content and deal information.
+- Identify meaningful risks supported by the evidence.
+- Use a risk_score between 0 and 100.
+- Use exactly SAFE, RISKY, or HIGH_RISK as the verdict.
+- Keep the summary consistent with the evidence.
+- Never invent facts that are not present in the provided information.
+"""
+
+        def get_deal_page():
+            response = gl.nondet.web.get(deal_url)
+            return response.body.decode("utf-8")
+
+        def analyze_page(page_content):
+            prompt = f"""
+{task}
+
+WEBPAGE CONTENT:
+{page_content[:12000]}
+"""
+            return gl.nondet.exec_prompt(prompt)
+
+        def analyze():
+            page_content = get_deal_page()
+            return analyze_page(page_content)
+
+        result = gl.eq_principle.prompt_non_comparative(
+            analyze,
+            task=task,
+            criteria=criteria
+        )
 
         self.last_title = title
         self.last_description = description
