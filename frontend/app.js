@@ -123,10 +123,12 @@ window.verifyDeal = async function () {
     button.innerText = "Waiting for GenLayer...";
 
     const receipt =
-      await readClient.waitForTransactionReceipt({
-        hash: txHash,
-        status: TransactionStatus.ACCEPTED
-      });
+  await readClient.waitForTransactionReceipt({
+    hash: txHash,
+    status: TransactionStatus.ACCEPTED,
+    interval: 3000,
+    retries: 20
+  });
 
     console.log("Receipt:", receipt);
 
