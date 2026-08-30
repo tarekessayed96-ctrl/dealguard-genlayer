@@ -6,7 +6,6 @@ const CONTRACT_ADDRESS =
   "0x23C558dBe1E7c3661492b7C326F9a60161Df03eA";
 
 window.verifyDeal = async function () {
-
   const title =
     document.getElementById("title").value.trim();
 
@@ -24,32 +23,25 @@ window.verifyDeal = async function () {
     return;
   }
 
-  const provider =
-    window.okxwallet || window.ethereum;
+  const provider = window.ethereum;
 
   if (!provider) {
-    alert("Please open DealGuard inside OKX Wallet.");
+    alert("Please open DealGuard inside your OKX Wallet browser.");
     return;
   }
 
-  const button =
-    document.querySelector("button");
+  const button = document.querySelector("button");
 
   button.disabled = true;
   button.innerText = "Connecting wallet...";
 
   try {
+    // Connect wallet
+    const accounts = await provider.request({
+      method: "eth_requestAccounts"
+    });
 
-    // --------------------------------
-    // 1. Connect wallet
-    // --------------------------------
-
-    const accounts =
-      await provider.request({
-        method: "eth_requestAccounts"
-      });
-
-    if (!accounts || !accounts.length) {
+    if (!accounts || accounts.length === 0) {
       throw new Error("No wallet account found.");
     }
 
@@ -57,10 +49,31 @@ window.verifyDeal = async function () {
 
     console.log("Wallet:", walletAddress);
 
+    // Check network
+    const chainId = await provider.request({
+      method: "eth_chainId"
+    });
 
-    // --------------------------------
-    // 2. Create GenLayer client
-    // --------------------------------
+    console.log("Current Chain ID:", chainId);
+
+    // GenLayer Studio / Studionet
+    const GENLAYER_CHAIN_ID = "0xf22f";
+
+    if (chainId.toLowerCase() !== GENLAYER_CHAIN_ID) {
+      button.innerText = "Switching to GenLayer...";
+
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            chainId: GENLAYER_CHAIN_ID
+          }
+        ]
+      });
+    }
+
+    // Create GenLayer client
+    button.innerText = "Preparing GenLayer...";
 
     const client = createClient({
       chain: studionet,
@@ -68,230 +81,112 @@ window.verifyDeal = async function () {
       provider: provider
     });
 
+    button.innerText = "Verifying with GenLayer...";
 
-    // --------------------------------
-    // 3. Connect wallet to Studionet
-    // --------------------------------
+    // Submit transaction
+    const txHash = await client.writeContract({
+      address: CONTRACT_ADDRESS,
+      functionName: "analyze_deal",
+      args: [
+        title,
+        description,
+        dealUrl,
+        secondUrl
+      ],
+      value: BigInt(0)
+    });
 
-    button.innerText =
-      "Connecting to GenLayer...";
+    console.log("Transaction:", txHash);
 
-    await client.connect("studionet");
+    button.innerText = "Waiting for GenLayer...";
 
-
-    // --------------------------------
-    // 4. Send transaction
-    // --------------------------------
-
-    button.innerText =
-      "Verifying with GenLayer...";
-
-    const txHash =
-      await client.writeContract({
-
-        address: CONTRACT_ADDRESS,
-
-        functionName: "analyze_deal",
-
-        args: [
-          title,
-          description,
-          dealUrl,
-          secondUrl
-        ],
-
-        value: BigInt(0)
-      });
-
-    console.log(
-      "Transaction:",
-      txHash
-    );
-
-
-    // --------------------------------
-    // 5. Wait for ACCEPTED
-    // --------------------------------
-
-    button.innerText =
-      "Waiting for GenLayer...";
-
+    // Wait up to approximately 60 seconds
     const receipt =
       await client.waitForTransactionReceipt({
-
         hash: txHash,
-
-        status:
-          TransactionStatus.ACCEPTED,
-
+        status: TransactionStatus.ACCEPTED,
         interval: 3000,
-
         retries: 20
       });
 
-    console.log(
-      "Receipt:",
-      receipt
-    );
+    console.log("Receipt:", receipt);
 
-
-    // --------------------------------
-    // 6. Check execution
-    // --------------------------------
-
+    // Check execution result
     if (
       receipt.txExecutionResultName &&
-      receipt.txExecutionResultName !==
-        "FINISHED_WITH_RETURN"
+      receipt.txExecutionResultName !== "FINISHED_WITH_RETURN"
     ) {
-
       throw new Error(
         "Contract execution failed: " +
         receipt.txExecutionResultName
       );
     }
 
+    button.innerText = "Reading verification...";
 
-    // --------------------------------
-    // 7. Read verification
-    // --------------------------------
-
-    button.innerText =
-      "Reading verification result...";
-
+    // Read contract result
     const verification =
       await client.readContract({
-
         address: CONTRACT_ADDRESS,
-
-        functionName:
-          "get_last_verification",
-
+        functionName: "get_last_verification",
         args: []
       });
 
-    console.log(
-      "Verification:",
-      verification
-    );
-
-
-    // --------------------------------
-    // 8. Parse result
-    // --------------------------------
+    console.log("Verification:", verification);
 
     let result;
 
-    if (
-      typeof verification === "string"
-    ) {
-
+    if (typeof verification === "string") {
       try {
-
-        result =
-          JSON.parse(verification);
-
+        result = JSON.parse(verification);
       } catch {
-
         result = {
-
           verdict: "UNKNOWN",
-
           risk_score: 0,
-
           confidence: 0,
-
-          summary:
-            verification,
-
+          summary: verification,
           reasons: [],
-
           evidence: []
         };
       }
-
     } else {
-
       result = verification;
-
     }
 
+    // Show report
+    document.getElementById("result").style.display = "block";
 
-    // --------------------------------
-    // 9. Display result
-    // --------------------------------
-
-    document.getElementById(
-      "result"
-    ).style.display = "block";
-
-
-    document.getElementById(
-      "score"
-    ).innerText =
+    document.getElementById("score").innerText =
       `${result?.risk_score ?? 0}/100`;
 
+    document.getElementById("verdict").innerText =
+      result?.verdict ?? "UNKNOWN";
 
-    document.getElementById(
-      "verdict"
-    ).innerText =
-      result?.verdict ??
-      "UNKNOWN";
+    document.getElementById("summary").innerText =
+      result?.summary ?? "";
 
-
-    document.getElementById(
-      "summary"
-    ).innerText =
-      result?.summary ??
-      "";
-
-
-    document.getElementById(
-      "reasons"
-    ).innerHTML =
+    document.getElementById("reasons").innerHTML =
       (result?.reasons || [])
-        .map(
-          reason =>
-            `<li>${reason}</li>`
-        )
+        .map(reason => `<li>${reason}</li>`)
         .join("");
 
-
-    document.getElementById(
-      "evidence"
-    ).innerHTML =
+    document.getElementById("evidence").innerHTML =
       (result?.evidence || [])
-        .map(
-          item =>
-            `<li>${item}</li>`
-        )
+        .map(item => `<li>${item}</li>`)
         .join("");
 
-
-    button.innerText =
-      "Verification complete";
-
+    button.innerText = "Verification complete";
     button.disabled = false;
 
-
   } catch (error) {
-
-    console.error(
-      "DealGuard error:",
-      error
-    );
+    console.error("DealGuard error:", error);
 
     alert(
       "Verification failed:\n\n" +
-      (
-        error?.message ||
-        String(error)
-      )
+      (error?.message || String(error))
     );
 
     button.disabled = false;
-
-    button.innerText =
-      "Verify Deal";
+    button.innerText = "Verify Deal";
   }
 };
