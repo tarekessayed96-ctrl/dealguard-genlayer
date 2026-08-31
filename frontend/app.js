@@ -1,178 +1,246 @@
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+import { createClient } from "genlayer-js";
+import { studionet } from "genlayer-js/chains";
+import { TransactionStatus } from "genlayer-js/types";
 
-from genlayer import *
-import json
+const CONTRACT_ADDRESS =
+  "0x5D1b99BA76701fcbcB090917EB4439715a45AD88";
 
+window.verifyDeal = async function () {
 
-class DealGuardV7(gl.Contract):
+  const title =
+    document.getElementById("title").value.trim();
 
-    verification_count: u32
+  const description =
+    document.getElementById("description").value.trim();
 
-    def __init__(self):
-        self.verification_count = 0
+  const dealUrl =
+    document.getElementById("dealUrl").value.trim();
 
-    @gl.public.write
-    def analyze_deal(
-        self,
-        title: str,
-        description: str,
-        deal_url: str,
-        second_source_url: str
-    ) -> str:
+  const secondUrl =
+    document.getElementById("secondUrl").value.trim();
 
-        if not title.strip():
-            raise gl.UserError("Deal title cannot be empty")
+  if (!title || !description || !dealUrl || !secondUrl) {
+    alert("Please complete all fields.");
+    return;
+  }
 
-        if not description.strip():
-            raise gl.UserError("Deal description cannot be empty")
+  const provider =
+    window.okxwallet || window.ethereum;
 
-        if not deal_url.startswith("https://"):
-            raise gl.UserError("Deal URL must use HTTPS")
+  if (!provider) {
+    alert("Please open DealGuard inside OKX Wallet.");
+    return;
+  }
 
-        if not second_source_url.startswith("https://"):
-            raise gl.UserError("Second source URL must use HTTPS")
+  const button =
+    document.querySelector("button");
 
-        def analyze() -> str:
+  button.disabled = true;
+  button.innerText =
+    "Connecting wallet...";
 
-            primary_page = gl.nondet.web.get(deal_url)
-            secondary_page = gl.nondet.web.get(second_source_url)
+  try {
 
-            primary_text = primary_page.body.decode("utf-8")
-            secondary_text = secondary_page.body.decode("utf-8")
+    const accounts =
+      await provider.request({
+        method: "eth_requestAccounts"
+      });
 
-            prompt = f"""
-You are DealGuard, an autonomous online deal verification system.
+    if (!accounts || !accounts.length) {
+      throw new Error("No wallet account found.");
+    }
 
-IMPORTANT:
-This is a completely new verification request.
-Do NOT use information from previous requests.
-Do NOT assume the product is a PS5, Toyota, iPhone, or any other
-previously tested product.
+    const walletAddress = accounts[0];
 
-DEAL TITLE:
-{title}
+    const currentChainId =
+      await provider.request({
+        method: "eth_chainId"
+      });
 
-DEAL DESCRIPTION:
-{description}
+    console.log("Wallet:", walletAddress);
+    console.log("Chain:", currentChainId);
 
-PRIMARY SOURCE:
-{deal_url}
+    const expectedChainId = "0xf22f";
 
-SECOND SOURCE:
-{second_source_url}
+    if (
+      currentChainId.toLowerCase() !==
+      expectedChainId
+    ) {
 
-PRIMARY SOURCE CONTENT:
-{primary_text[:10000]}
+      button.innerText =
+        "Switching to GenLayer...";
 
-SECOND SOURCE CONTENT:
-{secondary_text[:10000]}
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            chainId: expectedChainId
+          }
+        ]
+      });
+    }
 
-Your job is to independently determine whether THIS SPECIFIC DEAL
-is trustworthy.
+    button.innerText =
+      "Preparing GenLayer...";
 
-Compare the two supplied webpages.
+    const client =
+      createClient({
+        chain: studionet,
+        account: walletAddress,
+        provider: provider
+      });
 
-Analyze:
+    button.innerText =
+      "Verifying with GenLayer...";
 
-- Product or service identity
-- Advertised price
-- Currency
-- Seller
-- Product specifications
-- Availability
-- Shipping
-- Warranty
-- Return policy
-- Important conditions
-- Contradictions
-- Missing information
-- Suspicious or unrealistic claims
-- Possible fraud indicators
+    const txHash =
+      await client.writeContract({
+        address: CONTRACT_ADDRESS,
+        functionName: "analyze_deal",
+        args: [
+          title,
+          description,
+          dealUrl,
+          secondUrl
+        ],
+        value: BigInt(0)
+      });
 
-CRITICAL RULES:
+    console.log(
+      "DealGuard transaction:",
+      txHash
+    );
 
-1. Analyze only the current deal.
-2. Never use a previous verification.
-3. Never assume a product from an earlier request.
-4. Do not invent facts.
-5. Evidence must come only from the supplied webpages.
-6. If a webpage is inaccessible, say so.
-7. If the two sources do not actually verify the same deal,
-   increase the risk.
-8. A very low price alone is not proof of fraud, but it should
-   be investigated against the available evidence.
+    button.innerText =
+      "Waiting for GenLayer...";
 
-Return ONLY valid JSON:
+    const receipt =
+      await client.waitForTransactionReceipt({
+        hash: txHash,
+        status: TransactionStatus.ACCEPTED,
+        interval: 5000,
+        retries: 40
+      });
 
-{{
-    "verdict": "SAFE",
-    "risk_score": 0,
-    "confidence": 0,
-    "summary": "Short explanation of the current deal",
-    "reasons": [
-        "reason 1",
-        "reason 2",
-        "reason 3"
-    ],
-    "evidence": [
-        "evidence from the primary source",
-        "evidence from the secondary source"
-    ]
-}}
+    console.log(
+      "DealGuard receipt:",
+      receipt
+    );
 
-verdict MUST be one of:
+    /*
+     * IMPORTANT:
+     * We do NOT call get_last_verification().
+     *
+     * The current transaction is the current deal.
+     */
 
-SAFE
-RISKY
-HIGH_RISK
+    let verification =
+      receipt.returnData ??
+      receipt.result ??
+      receipt.data ??
+      receipt.return_value;
 
-risk_score:
-0 = very low risk
-100 = extremely high risk
+    console.log(
+      "Verification result:",
+      verification
+    );
 
-confidence:
-0 = very uncertain
-100 = very confident
-"""
+    if (!verification) {
+      throw new Error(
+        "Transaction completed, but no verification result was returned."
+      );
+    }
 
-            result = gl.nondet.exec_prompt(
-                prompt,
-                response_format="json"
-            )
+    let result;
 
-            return json.dumps(result, sort_keys=True)
+    if (typeof verification === "string") {
 
-        criteria = """
-The result must:
+      try {
 
-1. Be valid JSON.
-2. Contain:
-   verdict,
-   risk_score,
-   confidence,
-   summary,
-   reasons,
-   evidence.
-3. Use only SAFE, RISKY, or HIGH_RISK.
-4. Use risk_score from 0 to 100.
-5. Use confidence from 0 to 100.
-6. Analyze the CURRENT deal only.
-7. Compare the CURRENT two webpages.
-8. Never rely on a previous transaction or previous result.
-9. Never assume a fixed product.
-10. Evidence must be based only on supplied webpage content.
-"""
+        result =
+          JSON.parse(verification);
 
-        result = gl.eq_principle.prompt_non_comparative(
-            analyze,
-            task="Independently verify the current online deal using two web sources.",
-            criteria=criteria
+      } catch {
+
+        result = {
+          verdict: "UNKNOWN",
+          risk_score: 0,
+          confidence: 0,
+          summary: verification,
+          reasons: [],
+          evidence: []
+        };
+
+      }
+
+    } else {
+
+      result = verification;
+
+    }
+
+    document.getElementById(
+      "result"
+    ).style.display = "block";
+
+    document.getElementById(
+      "score"
+    ).innerText =
+      `${result?.risk_score ?? 0}/100`;
+
+    document.getElementById(
+      "verdict"
+    ).innerText =
+      result?.verdict ?? "UNKNOWN";
+
+    document.getElementById(
+      "summary"
+    ).innerText =
+      result?.summary ?? "";
+
+    document.getElementById(
+      "reasons"
+    ).innerHTML =
+      (result?.reasons || [])
+        .map(
+          reason =>
+            `<li>${reason}</li>`
         )
+        .join("");
 
-        self.verification_count += 1
+    document.getElementById(
+      "evidence"
+    ).innerHTML =
+      (result?.evidence || [])
+        .map(
+          item =>
+            `<li>${item}</li>`
+        )
+        .join("");
 
-        return result
+    button.innerText =
+      "Verification complete";
 
-    @gl.public.view
-    def get_verification_count(self) -> u32:
-        return self.verification_count
+    button.disabled = false;
+
+  } catch (error) {
+
+    console.error(
+      "DealGuard error:",
+      error
+    );
+
+    alert(
+      "Verification failed:\n\n" +
+      (
+        error?.message ||
+        String(error)
+      )
+    );
+
+    button.disabled = false;
+
+    button.innerText =
+      "Verify Deal";
+  }
+};
