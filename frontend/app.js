@@ -2,7 +2,7 @@ import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionHashVariant } from "genlayer-js/types";
 const CONTRACT_ADDRESS =
-  "0xe9d9ba98939268749bF1458Ce2AC46B03A936f65";
+  "0x2df8830eD829E347720076A2073bfb6CC1D5D791";
 const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 function escapeHtml(value) {
   return String(value ?? "")
