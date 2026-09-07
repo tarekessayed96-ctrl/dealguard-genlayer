@@ -41,26 +41,163 @@ function createCaseId() {
     Math.random().toString(36).slice(2)
   );
 }
+/*
+ * Convert the contract response into a JavaScript object.
+ */
+function parseVerification(rawResult) {
+  if (!rawResult) {
+    return null;
+  }
+  if (typeof rawResult === "string") {
+    try {
+      return JSON.parse(rawResult);
+    } catch {
+      throw new Error(
+        "DealGuard returned invalid JSON."
+      );
+    }
+  }
+  return rawResult;
+}
+/*
+ * Read the verification belonging ONLY to this caseId.
+ *
+ * We retry because the finalized state can take a little
+ * time to become readable through the RPC after execution.
+ *
+ * UNKNOWN is NOT treated as a successful verification.
+ */
+async function readVerificationWithRetry(
+  client,
+  caseId,
+  attempts = 12,
+  delayMs = 5000
+) {
+  let lastResult = null;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    console.log(
+      `Reading verification ${attempt}/${attempts}`,
+      caseId
+    );
+    try {
+      const rawResult =
+        await client.readContract({
+          address: CONTRACT_ADDRESS,
+          functionName: "get_verification",
+          args: [caseId],
+          transactionHashVariant:
+            TransactionHashVariant.LATEST_FINAL
+        });
+      console.log(
+        "Raw verification response:",
+        rawResult
+      );
+      const result =
+        parseVerification(rawResult);
+      lastResult = result;
+      console.log(
+        "Parsed verification:",
+        result
+      );
+      /*
+       * The result must belong to this exact request.
+       */
+      if (
+        result?.case_id &&
+        result.case_id !== caseId
+      ) {
+        throw new Error(
+          "Returned verification does not match this request."
+        );
+      }
+      /*
+       * A real verification has a known verdict.
+       */
+      const verdict =
+        String(result?.verdict ?? "")
+          .trim()
+          .toUpperCase();
+      if (
+        result?.case_id === caseId &&
+        ["SAFE", "RISKY", "HIGH_RISK"].includes(
+          verdict
+        )
+      ) {
+        return {
+          ...result,
+          verdict
+        };
+      }
+      /*
+       * If we received UNKNOWN, keep waiting.
+       */
+      console.log(
+        "Verification is not available yet. Retrying..."
+      );
+    } catch (error) {
+      console.warn(
+        `Verification read attempt ${attempt} failed:`,
+        error
+      );
+      /*
+       * Do not immediately fail.
+       * RPC/state propagation can temporarily fail.
+       */
+    }
+    if (attempt < attempts) {
+      const button =
+        document.getElementById("verifyBtn");
+      if (button) {
+        button.innerText =
+          `Waiting for verification... (${attempt}/${attempts})`;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, delayMs)
+      );
+    }
+  }
+  /*
+   * If all retries failed, return the last response
+   * only for diagnostics.
+   */
+  return lastResult;
+}
 window.verifyDeal = async function () {
   hideError();
-  const button = document.getElementById("verifyBtn");
+  const button =
+    document.getElementById("verifyBtn");
   const title =
     document.getElementById("title")?.value.trim();
   const description =
-    document.getElementById("description")?.value.trim();
+    document
+      .getElementById("description")
+      ?.value.trim();
   const dealUrl =
-    document.getElementById("dealUrl")?.value.trim();
+    document
+      .getElementById("dealUrl")
+      ?.value.trim();
   const secondUrl =
-    document.getElementById("secondUrl")?.value.trim();
-  if (!title || !description || !dealUrl || !secondUrl) {
-    showError("Please complete all fields.");
+    document
+      .getElementById("secondUrl")
+      ?.value.trim();
+  if (
+    !title ||
+    !description ||
+    !dealUrl ||
+    !secondUrl
+  ) {
+    showError(
+      "Please complete all fields."
+    );
     return;
   }
   if (
     !dealUrl.startsWith("https://") ||
     !secondUrl.startsWith("https://")
   ) {
-    showError("Both URLs must start with https://");
+    showError(
+      "Both URLs must start with https://"
+    );
     return;
   }
   const provider =
@@ -74,20 +211,34 @@ window.verifyDeal = async function () {
   try {
     if (button) {
       button.disabled = true;
-      button.innerText = "Connecting wallet...";
+      button.innerText =
+        "Connecting wallet...";
     }
-    const accounts = await provider.request({
-      method: "eth_requestAccounts"
-    });
-    if (!accounts || accounts.length === 0) {
-      throw new Error("No wallet account found.");
+    const accounts =
+      await provider.request({
+        method: "eth_requestAccounts"
+      });
+    if (
+      !accounts ||
+      accounts.length === 0
+    ) {
+      throw new Error(
+        "No wallet account found."
+      );
     }
     const account = accounts[0];
-    console.log("Wallet:", account);
-    let chainId = await provider.request({
-      method: "eth_chainId"
-    });
-    console.log("Current chain:", chainId);
+    console.log(
+      "Wallet:",
+      account
+    );
+    let chainId =
+      await provider.request({
+        method: "eth_chainId"
+      });
+    console.log(
+      "Current chain:",
+      chainId
+    );
     if (
       chainId.toLowerCase() !==
       EXPECTED_CHAIN_ID_HEX
@@ -98,21 +249,26 @@ window.verifyDeal = async function () {
       }
       try {
         await provider.request({
-          method: "wallet_switchEthereumChain",
+          method:
+            "wallet_switchEthereumChain",
           params: [
             {
-              chainId: EXPECTED_CHAIN_ID_HEX
+              chainId:
+                EXPECTED_CHAIN_ID_HEX
             }
           ]
         });
       } catch (err) {
         if (err?.code === 4902) {
           await provider.request({
-            method: "wallet_addEthereumChain",
+            method:
+              "wallet_addEthereumChain",
             params: [
               {
-                chainId: EXPECTED_CHAIN_ID_HEX,
-                chainName: "GenLayer StudioNet",
+                chainId:
+                  EXPECTED_CHAIN_ID_HEX,
+                chainName:
+                  "GenLayer StudioNet",
                 nativeCurrency: {
                   name: "GEN",
                   symbol: "GEN",
@@ -128,9 +284,10 @@ window.verifyDeal = async function () {
           throw err;
         }
       }
-      chainId = await provider.request({
-        method: "eth_chainId"
-      });
+      chainId =
+        await provider.request({
+          method: "eth_chainId"
+        });
       if (
         chainId.toLowerCase() !==
         EXPECTED_CHAIN_ID_HEX
@@ -144,12 +301,20 @@ window.verifyDeal = async function () {
       button.innerText =
         "Preparing GenLayer...";
     }
-    const client = createClient({
-      chain: studionet,
-      account,
-      provider
-    });
-    const caseId = createCaseId();
+    const client =
+      createClient({
+        chain: studionet,
+        account,
+        provider
+      });
+    /*
+     * IMPORTANT:
+     * This Case ID is the correlation ID for the request.
+     *
+     * It is NOT the transaction hash.
+     */
+    const caseId =
+      createCaseId();
     console.log(
       "DealGuard case ID:",
       caseId
@@ -160,8 +325,10 @@ window.verifyDeal = async function () {
     }
     const txHash =
       await client.writeContract({
-        address: CONTRACT_ADDRESS,
-        functionName: "analyze_deal",
+        address:
+          CONTRACT_ADDRESS,
+        functionName:
+          "analyze_deal",
         args: [
           caseId,
           title,
@@ -180,11 +347,7 @@ window.verifyDeal = async function () {
         "Waiting for GenLayer finalization...";
     }
     /*
-     * Use waitForTransactionReceipt because
-     * this is supported by the installed SDK.
-     *
-     * waitUntil: "finalized" makes sure we wait
-     * for finalized GenLayer state.
+     * Wait for actual finalized transaction state.
      */
     const transaction =
       await client.waitForTransactionReceipt({
@@ -198,10 +361,7 @@ window.verifyDeal = async function () {
       transaction
     );
     /*
-     * Finalized does not automatically mean that
-     * the contract execution succeeded.
-     *
-     * Check the execution result when available.
+     * Check contract execution result.
      */
     const executionResult =
       transaction?.txExecutionResult;
@@ -209,7 +369,8 @@ window.verifyDeal = async function () {
       transaction?.txExecutionResultName;
     if (
       executionResult &&
-      executionResult !== "FINISHED_WITH_RETURN"
+      executionResult !==
+        "FINISHED_WITH_RETURN"
     ) {
       throw new Error(
         `DealGuard transaction failed: ${
@@ -223,121 +384,166 @@ window.verifyDeal = async function () {
         "Reading verified result...";
     }
     /*
-     * Read ONLY the result belonging to this
-     * specific case ID.
+     * IMPORTANT:
+     *
+     * We read using the SAME caseId that was submitted.
+     *
+     * We never use txHash here.
+     *
+     * We also retry because the RPC may temporarily
+     * return the default UNKNOWN response.
      */
-    const rawResult =
-      await client.readContract({
-        address: CONTRACT_ADDRESS,
-        functionName: "get_verification",
-        args: [caseId],
-        transactionHashVariant:
-          TransactionHashVariant.LATEST_FINAL
-      });
-    console.log(
-      "DealGuard raw result:",
-      rawResult
-    );
-    if (!rawResult) {
-      throw new Error(
-        "DealGuard returned an empty result."
+    const result =
+      await readVerificationWithRetry(
+        client,
+        caseId,
+        12,
+        5000
       );
-    }
-    let result;
-    if (typeof rawResult === "string") {
-      try {
-        result = JSON.parse(rawResult);
-      } catch {
-        throw new Error(
-          "DealGuard returned invalid JSON."
-        );
-      }
-    } else {
-      result = rawResult;
-    }
     console.log(
-      "DealGuard final result:",
+      "DealGuard verified result:",
       result
     );
     /*
-     * Safety check:
-     * Make sure the result belongs to
-     * the current request.
+     * A valid result must exist.
+     */
+    if (!result) {
+      throw new Error(
+        "DealGuard did not return a verification result."
+      );
+    }
+    /*
+     * Make sure the result belongs to this exact request.
      */
     if (
-      result?.case_id &&
       result.case_id !== caseId
     ) {
       throw new Error(
         "Returned verification does not match this request."
       );
     }
+    /*
+     * Never display UNKNOWN as a successful verification.
+     */
+    const verdict =
+      String(
+        result.verdict ?? ""
+      )
+        .trim()
+        .toUpperCase();
+    if (
+      ![
+        "SAFE",
+        "RISKY",
+        "HIGH_RISK"
+      ].includes(verdict)
+    ) {
+      throw new Error(
+        "Verification result is still unavailable. Please try again."
+      );
+    }
+    /*
+     * Display result.
+     */
     const resultBox =
-      document.getElementById("result");
+      document.getElementById(
+        "result"
+      );
     if (resultBox) {
-      resultBox.style.display = "block";
+      resultBox.style.display =
+        "block";
     }
     const score =
-      document.getElementById("score");
+      document.getElementById(
+        "score"
+      );
     if (score) {
       score.textContent =
         `${result?.risk_score ?? 0}/100`;
     }
-    const verdict =
-      document.getElementById("verdict");
-    if (verdict) {
-      verdict.textContent =
-        result?.verdict ?? "UNKNOWN";
+    const verdictBox =
+      document.getElementById(
+        "verdict"
+      );
+    if (verdictBox) {
+      verdictBox.textContent =
+        verdict;
     }
     const confidence =
-      document.getElementById("confidence");
+      document.getElementById(
+        "confidence"
+      );
     if (confidence) {
       confidence.textContent =
-        `Confidence: ${result?.confidence ?? 0}%`;
+        `Confidence: ${
+          result?.confidence ?? 0
+        }%`;
     }
     const summary =
-      document.getElementById("summary");
+      document.getElementById(
+        "summary"
+      );
     if (summary) {
       summary.textContent =
         result?.summary ?? "";
     }
     const reasons =
-      document.getElementById("reasons");
+      document.getElementById(
+        "reasons"
+      );
     if (reasons) {
       reasons.innerHTML =
-        (Array.isArray(result?.reasons)
-          ? result.reasons
-          : []
+        (
+          Array.isArray(
+            result?.reasons
+          )
+            ? result.reasons
+            : []
         )
           .map(
             (reason) =>
-              `<li>${escapeHtml(reason)}</li>`
+              `<li>${escapeHtml(
+                reason
+              )}</li>`
           )
           .join("");
     }
     const evidence =
-      document.getElementById("evidence");
+      document.getElementById(
+        "evidence"
+      );
     if (evidence) {
       evidence.innerHTML =
-        (Array.isArray(result?.evidence)
-          ? result.evidence
-          : []
+        (
+          Array.isArray(
+            result?.evidence
+          )
+            ? result.evidence
+            : []
         )
           .map(
             (item) =>
-              `<li>${escapeHtml(item)}</li>`
+              `<li>${escapeHtml(
+                item
+              )}</li>`
           )
           .join("");
     }
     const caseIdBox =
-      document.getElementById("caseId");
+      document.getElementById(
+        "caseId"
+      );
     if (caseIdBox) {
-      caseIdBox.textContent = caseId;
+      caseIdBox.textContent =
+        caseId;
     }
     const txHashBox =
-      document.getElementById("txHash");
+      document.getElementById(
+        "txHash"
+      );
     if (txHashBox) {
-      txHashBox.textContent = txHash;
+      txHashBox.textContent =
+        txHash;
     }
     if (button) {
       button.innerText =
@@ -351,12 +557,13 @@ window.verifyDeal = async function () {
     );
     showError(
       error?.shortMessage ||
-      error?.message ||
-      String(error)
+        error?.message ||
+        String(error)
     );
     if (button) {
       button.disabled = false;
-      button.innerText = "Verify Deal";
+      button.innerText =
+        "Verify Deal";
     }
   }
 };
