@@ -2,571 +2,168 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DealGuard - GenLayer</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap');
-
     body {
       font-family: Inter, sans-serif;
     }
   </style>
 </head>
-
 <body class="bg-[#070709] text-white min-h-screen">
-
   <div class="max-w-6xl mx-auto p-6">
-
+    <!-- Header -->
     <header class="flex justify-between items-center mb-12">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-white text-black rounded-lg grid place-items-center font-bold">
+        <div
+          class="w-8 h-8 bg-white text-black rounded-lg grid place-items-center font-bold"
+        >
           D
         </div>
-        <span class="font-bold">DealGuard</span>
+        <span class="font-bold">
+          DealGuard
+        </span>
       </div>
-
-      <span class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/10">
+      <span
+        class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/10"
+      >
         GenLayer Active
       </span>
     </header>
-
+    <!-- Main -->
     <div class="grid md:grid-cols-2 gap-8">
-
+      <!-- Hero -->
       <div>
-
-        <h1 class="text-5xl md:text-7xl font-extrabold leading-[0.9]">
+        <h1
+          class="text-5xl md:text-7xl font-extrabold leading-[0.9]"
+        >
           Don't trust<br>
           the deal.<br>
-          <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 to-emerald-300">
+          <span
+            class="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 to-emerald-300"
+          >
             Verify it.
           </span>
         </h1>
-
         <p class="mt-6 text-white/50 max-w-lg">
-          DealGuard reads and compares real web sources to verify
-          any online deal using GenLayer.
+          DealGuard reads and compares real web sources
+          to verify online deals using GenLayer.
         </p>
-
+        <div
+          class="mt-8 text-xs text-white/30 max-w-md"
+        >
+          Every verification receives a unique case ID
+          and is independently analyzed by GenLayer.
+        </div>
       </div>
-
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-
+      <!-- Verification Form -->
+      <div
+        class="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4"
+      >
         <input
-          id="t"
+          id="title"
           class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none text-sm"
           placeholder="Deal title"
           value="Samsung Refrigerator 300L - $99"
         >
-
         <textarea
-          id="d"
+          id="description"
           class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none h-28 text-sm"
           placeholder="Describe the deal..."
         >Brand new Samsung 300L refrigerator advertised for $99 with free shipping.</textarea>
-
         <input
-          id="u1"
+          id="dealUrl"
           class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none text-sm font-mono"
           placeholder="Primary deal URL"
           value="https://www.samsung.com/us/refrigerators/"
         >
-
         <input
-          id="u2"
+          id="secondUrl"
           class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none text-sm font-mono"
           placeholder="Second source URL"
           value="https://www.bestbuy.com/site/searchpage.jsp?st=samsung+refrigerator"
         >
-
         <button
-          onclick="verify()"
-          id="b"
-          class="w-full bg-white text-black p-4 rounded-xl font-bold"
+          id="verifyBtn"
+          onclick="verifyDeal()"
+          class="w-full bg-white text-black p-4 rounded-xl font-bold transition hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           START VERIFICATION
         </button>
-
+        <!-- Error -->
         <div
-          id="err"
+          id="error"
           class="hidden bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-xl text-xs"
         ></div>
-
       </div>
-
     </div>
-
+    <!-- Result -->
     <div
-      id="r"
+      id="result"
       class="hidden mt-8 bg-white/5 border border-white/10 rounded-2xl p-6"
     >
-
       <div class="flex justify-between items-center">
-
         <span
-          id="v"
+          id="verdict"
           class="px-3 py-1 rounded-full border text-xs font-bold"
         >
           -
         </span>
-
         <span
-          id="s"
+          id="score"
           class="text-4xl font-bold"
         >
           -
         </span>
-
       </div>
-
       <p
-        id="conf"
+        id="confidence"
         class="mt-2 text-xs text-white/40"
       ></p>
-
       <p
-        id="sum"
+        id="summary"
         class="mt-4 text-sm text-white/70 bg-black/40 p-4 rounded-xl"
       ></p>
-
       <h3 class="mt-6 font-bold">
         Reasons
       </h3>
-
       <ul
-        id="rs"
+        id="reasons"
         class="mt-2 list-disc pl-5 text-sm text-white/60 space-y-2"
       ></ul>
-
       <h3 class="mt-6 font-bold">
         Evidence
       </h3>
-
       <ul
-        id="ev"
+        id="evidence"
         class="mt-2 list-disc pl-5 text-sm text-white/60 space-y-2"
       ></ul>
-
-      <p
-        id="tx"
-        class="mt-6 text-[9px] font-mono break-all opacity-30"
-      ></p>
-
+      <div
+        class="mt-6 bg-black/30 rounded-xl p-4"
+      >
+        <p class="text-[10px] text-white/30 mb-1">
+          CASE ID
+        </p>
+        <p
+          id="caseId"
+          class="text-[10px] font-mono break-all text-white/50"
+        ></p>
+        <p class="text-[10px] text-white/30 mt-4 mb-1">
+          TRANSACTION
+        </p>
+        <p
+          id="txHash"
+          class="text-[10px] font-mono break-all text-white/50"
+        ></p>
+      </div>
     </div>
-
   </div>
-
-
-<script type="module">
-
-import { createClient } from
-  "https://esm.sh/genlayer-js@0.1.6";
-
-import { studionet } from
-  "https://esm.sh/genlayer-js@0.1.6/chains";
-
-import { TransactionStatus } from
-  "https://esm.sh/genlayer-js@0.1.6/types";
-
-
-/*
- * IMPORTANT
- *
- * This is DealGuard V7.
- *
- * It does NOT use get_last_verification().
- */
-
-const CONTRACT_ADDRESS =
-  "0x5D1b99BA76701fcbcB090917EB4439715a45AD88";
-
-
-const CHAIN_ID =
-  "0xf22f";
-
-
-window.verify = async function () {
-
-  const button =
-    document.getElementById("b");
-
-  const errorBox =
-    document.getElementById("err");
-
-  const resultBox =
-    document.getElementById("r");
-
-
-  const title =
-    document.getElementById("t").value.trim();
-
-  const description =
-    document.getElementById("d").value.trim();
-
-  const dealUrl =
-    document.getElementById("u1").value.trim();
-
-  const secondUrl =
-    document.getElementById("u2").value.trim();
-
-
-  errorBox.classList.add("hidden");
-
-
-  if (
-    !title ||
-    !description ||
-    !dealUrl ||
-    !secondUrl
-  ) {
-
-    errorBox.innerText =
-      "Please complete all fields.";
-
-    errorBox.classList.remove("hidden");
-
-    return;
-  }
-
-
-  const provider =
-    window.okxwallet ||
-    window.ethereum;
-
-
-  if (!provider) {
-
-    errorBox.innerText =
-      "Open DealGuard inside OKX Wallet.";
-
-    errorBox.classList.remove("hidden");
-
-    return;
-  }
-
-
-  try {
-
-    button.disabled = true;
-
-    button.innerText =
-      "Connecting wallet...";
-
-
-    const accounts =
-      await provider.request({
-        method:
-          "eth_requestAccounts"
-      });
-
-
-    if (
-      !accounts ||
-      !accounts.length
-    ) {
-      throw new Error(
-        "No wallet account found."
-      );
-    }
-
-
-    const account =
-      accounts[0];
-
-
-    const currentChain =
-      await provider.request({
-        method:
-          "eth_chainId"
-      });
-
-
-    console.log(
-      "Current chain:",
-      currentChain
-    );
-
-
-    if (
-      currentChain.toLowerCase() !==
-      CHAIN_ID
-    ) {
-
-      button.innerText =
-        "Switching to GenLayer...";
-
-
-      await provider.request({
-
-        method:
-          "wallet_switchEthereumChain",
-
-        params: [
-          {
-            chainId:
-              CHAIN_ID
-          }
-        ]
-
-      });
-
-    }
-
-
-    button.innerText =
-      "Preparing GenLayer...";
-
-
-    const client =
-      createClient({
-
-        chain:
-          studionet,
-
-        account:
-          account,
-
-        provider:
-          provider
-
-      });
-
-
-    button.innerText =
-      "Analyzing deal...";
-
-
-    /*
-     * This creates a NEW verification request.
-     */
-
-    const txHash =
-      await client.writeContract({
-
-        address:
-          CONTRACT_ADDRESS,
-
-        functionName:
-          "analyze_deal",
-
-        args: [
-          title,
-          description,
-          dealUrl,
-          secondUrl
-        ],
-
-        value:
-          BigInt(0)
-
-      });
-
-
-    console.log(
-      "DealGuard TX:",
-      txHash
-    );
-
-
-    button.innerText =
-      "Waiting for GenLayer consensus...";
-
-
-    const receipt =
-      await client.waitForTransactionReceipt({
-
-        hash:
-          txHash,
-
-        status:
-          TransactionStatus.ACCEPTED,
-
-        interval:
-          5000,
-
-        retries:
-          90
-
-      });
-
-
-    console.log(
-      "Receipt:",
-      receipt
-    );
-
-
-    /*
-     * IMPORTANT:
-     *
-     * We do NOT call:
-     *
-     * get_last_verification()
-     *
-     * because that could return an old deal.
-     */
-
-
-    let rawResult =
-      receipt.returnData ??
-      receipt.result ??
-      receipt.return_value ??
-      receipt.data;
-
-
-    console.log(
-      "Raw transaction result:",
-      rawResult
-    );
-
-
-    if (!rawResult) {
-
-      throw new Error(
-        "GenLayer completed the transaction, but the returned verification result could not be read."
-      );
-
-    }
-
-
-    let result;
-
-
-    if (
-      typeof rawResult ===
-      "string"
-    ) {
-
-      try {
-
-        result =
-          JSON.parse(rawResult);
-
-      } catch {
-
-        throw new Error(
-          "The transaction returned data, but it was not valid JSON."
-        );
-
-      }
-
-    } else {
-
-      result =
-        rawResult;
-
-    }
-
-
-    console.log(
-      "DealGuard result:",
-      result
-    );
-
-
-    resultBox.classList.remove(
-      "hidden"
-    );
-
-
-    document.getElementById(
-      "s"
-    ).innerText =
-      `${result.risk_score ?? 0}/100`;
-
-
-    document.getElementById(
-      "v"
-    ).innerText =
-      result.verdict ??
-      "UNKNOWN";
-
-
-    document.getElementById(
-      "conf"
-    ).innerText =
-      `Confidence: ${
-        result.confidence ?? 0
-      }/100`;
-
-
-    document.getElementById(
-      "sum"
-    ).innerText =
-      result.summary ??
-      "";
-
-
-    document.getElementById(
-      "rs"
-    ).innerHTML =
-      (result.reasons || [])
-        .map(
-          x =>
-            `<li>${x}</li>`
-        )
-        .join("");
-
-
-    document.getElementById(
-      "ev"
-    ).innerHTML =
-      (result.evidence || [])
-        .map(
-          x =>
-            `<li>${x}</li>`
-        )
-        .join("");
-
-
-    document.getElementById(
-      "tx"
-    ).innerText =
-      txHash;
-
-
-    button.innerText =
-      "Verification complete ✓";
-
-
-    button.disabled =
-      false;
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "DealGuard error:",
-      error
-    );
-
-
-    errorBox.innerText =
-      error?.shortMessage ||
-      error?.message ||
-      String(error);
-
-
-    errorBox.classList.remove(
-      "hidden"
-    );
-
-
-    button.innerText =
-      "START VERIFICATION";
-
-
-    button.disabled =
-      false;
-
-  }
-
-};
-
-</script>
-
+  <!-- Vite entry -->
+  <script
+    type="module"
+    src="/app.js"
+  ></script>
 </body>
 </html>
