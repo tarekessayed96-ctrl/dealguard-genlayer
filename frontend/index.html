@@ -3,164 +3,378 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DealGuard - GenLayer</title>
+  <title>DealGuard — AI Deal Verification</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: Inter, sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.08), transparent 28%),
+        #070709;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(16px);
+    }
+    .input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      outline: none;
+      color: white;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .input:focus {
+      border-color: rgba(167, 139, 250, 0.7);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.10);
+    }
+    .input::placeholder {
+      color: rgba(255, 255, 255, 0.30);
+    }
+    .verify-button {
+      position: relative;
+      overflow: hidden;
+    }
+    .verify-button::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        110deg,
+        transparent 20%,
+        rgba(255,255,255,0.35) 50%,
+        transparent 80%
+      );
+      transform: translateX(-120%);
+      transition: transform 0.7s;
+    }
+    .verify-button:hover::after {
+      transform: translateX(120%);
+    }
+    .feature {
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.025);
     }
   </style>
 </head>
-<body class="bg-[#070709] text-white min-h-screen">
-  <div class="max-w-6xl mx-auto p-6">
-    <!-- Header -->
-    <header class="flex justify-between items-center mb-12">
-      <div class="flex items-center gap-2">
+<body class="text-white min-h-screen">
+  <!-- HEADER -->
+  <header class="max-w-6xl mx-auto px-5 pt-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
         <div
-          class="w-8 h-8 bg-white text-black rounded-lg grid place-items-center font-bold"
+          class="w-10 h-10 rounded-xl bg-white text-black grid place-items-center font-black text-lg shadow-lg"
         >
           D
         </div>
-        <span class="font-bold">
-          DealGuard
+        <div>
+          <div class="font-extrabold tracking-tight">
+            DealGuard
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-white/30">
+            Deal Verification
+          </div>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-2 px-3 py-2 rounded-full glass text-xs"
+      >
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-white/70">
+          GenLayer Active
         </span>
       </div>
-      <span
-        class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/10"
-      >
-        GenLayer Active
-      </span>
-    </header>
-    <!-- Main -->
-    <div class="grid md:grid-cols-2 gap-8">
-      <!-- Hero -->
-      <div>
+    </div>
+  </header>
+  <!-- MAIN -->
+  <main class="max-w-6xl mx-auto px-5 py-16">
+    <div class="grid lg:grid-cols-2 gap-12 items-start">
+      <!-- HERO -->
+      <section class="pt-4">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-[11px] text-white/50 mb-7"
+        >
+          <span>🛡️</span>
+          Decentralized Deal Intelligence
+        </div>
         <h1
-          class="text-5xl md:text-7xl font-extrabold leading-[0.9]"
+          class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[-0.05em] leading-[0.92]"
         >
           Don't trust<br>
           the deal.<br>
           <span
-            class="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 to-emerald-300"
+            class="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 via-purple-300 to-emerald-300"
           >
             Verify it.
           </span>
         </h1>
-        <p class="mt-6 text-white/50 max-w-lg">
-          DealGuard reads and compares real web sources
-          to verify online deals using GenLayer.
-        </p>
-        <div
-          class="mt-8 text-xs text-white/30 max-w-md"
+        <p
+          class="mt-7 text-base sm:text-lg text-white/45 max-w-xl leading-relaxed"
         >
-          Every verification receives a unique case ID
-          and is independently analyzed by GenLayer.
+          DealGuard compares real web sources and uses
+          GenLayer to determine whether an online deal
+          is trustworthy, suspicious, or high risk.
+        </p>
+        <!-- FEATURES -->
+        <div class="grid sm:grid-cols-3 gap-3 mt-10">
+          <div class="feature rounded-2xl p-4">
+            <div class="text-xl mb-3">🌐</div>
+            <div class="text-sm font-bold">
+              Web Evidence
+            </div>
+            <div class="text-[11px] text-white/35 mt-1">
+              Real source content
+            </div>
+          </div>
+          <div class="feature rounded-2xl p-4">
+            <div class="text-xl mb-3">⚖️</div>
+            <div class="text-sm font-bold">
+              Source Comparison
+            </div>
+            <div class="text-[11px] text-white/35 mt-1">
+              Independent verification
+            </div>
+          </div>
+          <div class="feature rounded-2xl p-4">
+            <div class="text-xl mb-3">🔐</div>
+            <div class="text-sm font-bold">
+              Unique Cases
+            </div>
+            <div class="text-[11px] text-white/35 mt-1">
+              Request-specific results
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-8 text-xs text-white/25 leading-relaxed max-w-lg"
+        >
+          Every verification receives a unique case ID.
+          Results are stored and retrieved for that specific
+          verification request.
+        </div>
+      </section>
+      <!-- VERIFICATION CARD -->
+      <section
+        class="glass rounded-3xl p-5 sm:p-7 shadow-2xl"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <div class="font-bold">
+              Verify a Deal
+            </div>
+            <div class="text-xs text-white/30 mt-1">
+              Analyze two independent web sources
+            </div>
+          </div>
+          <div
+            class="text-[10px] px-2.5 py-1 rounded-lg bg-white/5 text-white/35 border border-white/5"
+          >
+            GENLAYER
+          </div>
+        </div>
+        <!-- TITLE -->
+        <div class="space-y-4">
+          <input
+            id="title"
+            class="input"
+            placeholder="Deal title"
+            value="Samsung Refrigerator 300L - $99"
+          >
+          <!-- DESCRIPTION -->
+          <textarea
+            id="description"
+            class="input h-28 resize-none"
+            placeholder="Describe the deal..."
+          >Brand new Samsung 300L refrigerator advertised for $99 with free shipping.</textarea>
+          <!-- PRIMARY URL -->
+          <div>
+            <label class="block text-[10px] uppercase tracking-wider text-white/30 mb-2">
+              Primary source
+            </label>
+            <input
+              id="dealUrl"
+              class="input font-mono text-xs"
+              placeholder="https://..."
+              value="https://www.samsung.com/us/refrigerators/"
+            >
+          </div>
+          <!-- SECOND SOURCE -->
+          <div>
+            <label class="block text-[10px] uppercase tracking-wider text-white/30 mb-2">
+              Independent source
+            </label>
+            <input
+              id="secondUrl"
+              class="input font-mono text-xs"
+              placeholder="https://..."
+              value="https://www.bestbuy.com/site/searchpage.jsp?st=samsung+refrigerator"
+            >
+          </div>
+          <!-- BUTTON -->
+          <button
+            id="verifyBtn"
+            onclick="verifyDeal()"
+            class="verify-button w-full bg-white text-black p-4 rounded-2xl font-extrabold text-sm tracking-wide transition hover:bg-white/90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            START VERIFICATION
+          </button>
+          <!-- ERROR -->
+          <div
+            id="error"
+            class="hidden bg-red-500/10 border border-red-500/20 text-red-300 p-4 rounded-2xl text-xs leading-relaxed"
+          ></div>
+        </div>
+      </section>
+    </div>
+    <!-- RESULT -->
+    <section
+      id="result"
+      class="hidden mt-10 glass rounded-3xl p-5 sm:p-7"
+    >
+      <!-- RESULT HEADER -->
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5"
+      >
+        <div>
+          <div
+            class="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-2"
+          >
+            Verification Result
+          </div>
+          <div
+            id="verdict"
+            class="inline-flex px-3 py-1.5 rounded-full border text-xs font-bold"
+          >
+            -
+          </div>
+        </div>
+        <div class="text-left sm:text-right">
+          <div
+            class="text-[10px] uppercase tracking-wider text-white/25 mb-1"
+          >
+            Risk Score
+          </div>
+          <div
+            id="score"
+            class="text-4xl sm:text-5xl font-black tracking-tight"
+          >
+            -
+          </div>
         </div>
       </div>
-      <!-- Verification Form -->
+      <!-- CONFIDENCE -->
       <div
-        class="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4"
-      >
-        <input
-          id="title"
-          class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none text-sm"
-          placeholder="Deal title"
-          value="Samsung Refrigerator 300L - $99"
-        >
-        <textarea
-          id="description"
-          class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none h-28 text-sm"
-          placeholder="Describe the deal..."
-        >Brand new Samsung 300L refrigerator advertised for $99 with free shipping.</textarea>
-        <input
-          id="dealUrl"
-          class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none text-sm font-mono"
-          placeholder="Primary deal URL"
-          value="https://www.samsung.com/us/refrigerators/"
-        >
-        <input
-          id="secondUrl"
-          class="w-full p-3.5 rounded-xl bg-black/50 border border-white/10 outline-none text-sm font-mono"
-          placeholder="Second source URL"
-          value="https://www.bestbuy.com/site/searchpage.jsp?st=samsung+refrigerator"
-        >
-        <button
-          id="verifyBtn"
-          onclick="verifyDeal()"
-          class="w-full bg-white text-black p-4 rounded-xl font-bold transition hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          START VERIFICATION
-        </button>
-        <!-- Error -->
+        id="confidence"
+        class="mt-4 text-xs text-white/40"
+      ></div>
+      <!-- SUMMARY -->
+      <div class="mt-6">
         <div
-          id="error"
-          class="hidden bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-xl text-xs"
+          class="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-2"
+        >
+          Analysis
+        </div>
+        <div
+          id="summary"
+          class="text-sm text-white/65 bg-black/30 border border-white/5 p-5 rounded-2xl leading-relaxed"
         ></div>
       </div>
-    </div>
-    <!-- Result -->
-    <div
-      id="result"
-      class="hidden mt-8 bg-white/5 border border-white/10 rounded-2xl p-6"
-    >
-      <div class="flex justify-between items-center">
-        <span
-          id="verdict"
-          class="px-3 py-1 rounded-full border text-xs font-bold"
+      <!-- REASONS + EVIDENCE -->
+      <div class="grid lg:grid-cols-2 gap-5 mt-6">
+        <!-- REASONS -->
+        <div
+          class="bg-black/20 border border-white/5 rounded-2xl p-5"
         >
-          -
-        </span>
-        <span
-          id="score"
-          class="text-4xl font-bold"
+          <div class="flex items-center gap-2 mb-4">
+            <span>⚠️</span>
+            <h3 class="font-bold text-sm">
+              Risk Factors
+            </h3>
+          </div>
+          <ul
+            id="reasons"
+            class="list-disc pl-5 text-sm text-white/55 space-y-3 leading-relaxed"
+          ></ul>
+        </div>
+        <!-- EVIDENCE -->
+        <div
+          class="bg-black/20 border border-white/5 rounded-2xl p-5"
         >
-          -
-        </span>
+          <div class="flex items-center gap-2 mb-4">
+            <span>🔎</span>
+            <h3 class="font-bold text-sm">
+              Evidence
+            </h3>
+          </div>
+          <ul
+            id="evidence"
+            class="list-disc pl-5 text-sm text-white/55 space-y-3 leading-relaxed"
+          ></ul>
+        </div>
       </div>
-      <p
-        id="confidence"
-        class="mt-2 text-xs text-white/40"
-      ></p>
-      <p
-        id="summary"
-        class="mt-4 text-sm text-white/70 bg-black/40 p-4 rounded-xl"
-      ></p>
-      <h3 class="mt-6 font-bold">
-        Reasons
-      </h3>
-      <ul
-        id="reasons"
-        class="mt-2 list-disc pl-5 text-sm text-white/60 space-y-2"
-      ></ul>
-      <h3 class="mt-6 font-bold">
-        Evidence
-      </h3>
-      <ul
-        id="evidence"
-        class="mt-2 list-disc pl-5 text-sm text-white/60 space-y-2"
-      ></ul>
+      <!-- PROOF -->
       <div
-        class="mt-6 bg-black/30 rounded-xl p-4"
+        class="mt-6 bg-black/30 border border-white/5 rounded-2xl p-5"
       >
-        <p class="text-[10px] text-white/30 mb-1">
-          CASE ID
-        </p>
-        <p
-          id="caseId"
-          class="text-[10px] font-mono break-all text-white/50"
-        ></p>
-        <p class="text-[10px] text-white/30 mt-4 mb-1">
-          TRANSACTION
-        </p>
-        <p
-          id="txHash"
-          class="text-[10px] font-mono break-all text-white/50"
-        ></p>
+        <div class="flex items-center gap-2 mb-5">
+          <span>⛓️</span>
+          <div>
+            <div class="font-bold text-sm">
+              Verification Proof
+            </div>
+            <div class="text-[10px] text-white/25 mt-1">
+              Request-specific GenLayer verification
+            </div>
+          </div>
+        </div>
+        <!-- CASE ID -->
+        <div class="mb-5">
+          <div
+            class="text-[10px] uppercase tracking-wider text-white/25 mb-2"
+          >
+            Case ID
+          </div>
+          <div
+            id="caseId"
+            class="text-[10px] sm:text-xs font-mono break-all text-white/45 bg-white/[0.03] p-3 rounded-xl"
+          ></div>
+        </div>
+        <!-- TRANSACTION -->
+        <div>
+          <div
+            class="text-[10px] uppercase tracking-wider text-white/25 mb-2"
+          >
+            Transaction
+          </div>
+          <div
+            id="txHash"
+            class="text-[10px] sm:text-xs font-mono break-all text-white/45 bg-white/[0.03] p-3 rounded-xl"
+          ></div>
+        </div>
       </div>
-    </div>
-  </div>
-  <!-- Vite entry -->
+    </section>
+    <!-- FOOTER -->
+    <footer
+      class="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row gap-3 justify-between text-[10px] text-white/20"
+    >
+      <span>
+        DealGuard • Powered by GenLayer
+      </span>
+      <span>
+        Evidence-based verification
+      </span>
+    </footer>
+  </main>
+  <!-- VITE ENTRY -->
   <script
     type="module"
     src="/app.js"
