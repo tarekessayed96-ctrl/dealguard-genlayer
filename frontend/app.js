@@ -44,18 +44,14 @@ function createCaseId() {
 window.verifyDeal = async function () {
   hideError();
   const button = document.getElementById("verifyBtn");
-  const title = document
-    .getElementById("title")
-    ?.value.trim();
-  const description = document
-    .getElementById("description")
-    ?.value.trim();
-  const dealUrl = document
-    .getElementById("dealUrl")
-    ?.value.trim();
-  const secondUrl = document
-    .getElementById("secondUrl")
-    ?.value.trim();
+  const title =
+    document.getElementById("title")?.value.trim();
+  const description =
+    document.getElementById("description")?.value.trim();
+  const dealUrl =
+    document.getElementById("dealUrl")?.value.trim();
+  const secondUrl =
+    document.getElementById("secondUrl")?.value.trim();
   if (!title || !description || !dealUrl || !secondUrl) {
     showError("Please complete all fields.");
     return;
@@ -150,8 +146,8 @@ window.verifyDeal = async function () {
     }
     const client = createClient({
       chain: studionet,
-      account: account,
-      provider: provider
+      account,
+      provider
     });
     const caseId = createCaseId();
     console.log(
@@ -162,48 +158,63 @@ window.verifyDeal = async function () {
       button.innerText =
         "Analyzing deal...";
     }
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "analyze_deal",
-      args: [
-        caseId,
-        title,
-        description,
-        dealUrl,
-        secondUrl
-      ],
-      value: BigInt(0)
-    });
+    const txHash =
+      await client.writeContract({
+        address: CONTRACT_ADDRESS,
+        functionName: "analyze_deal",
+        args: [
+          caseId,
+          title,
+          description,
+          dealUrl,
+          secondUrl
+        ],
+        value: BigInt(0)
+      });
     console.log(
       "GenLayer transaction:",
       txHash
     );
     if (button) {
       button.innerText =
-        "Waiting for GenLayer consensus...";
+        "Waiting for GenLayer finalization...";
     }
+    /*
+     * Use waitForTransactionReceipt because
+     * this is supported by the installed SDK.
+     *
+     * waitUntil: "finalized" makes sure we wait
+     * for finalized GenLayer state.
+     */
     const transaction =
-      await client.waitForFinalization({
-        hash: txHash
+      await client.waitForTransactionReceipt({
+        hash: txHash,
+        waitUntil: "finalized",
+        interval: 5000,
+        retries: 120
       });
     console.log(
       "Finalized transaction:",
       transaction
     );
     /*
-     * The transaction has reached finalization.
-     * Some genlayer-js versions do not export
-     * isSuccessful(), so we avoid that import.
+     * Finalized does not automatically mean that
+     * the contract execution succeeded.
+     *
+     * Check the execution result when available.
      */
+    const executionResult =
+      transaction?.txExecutionResult;
+    const executionResultName =
+      transaction?.txExecutionResultName;
     if (
-      transaction?.txExecutionResult &&
-      transaction.txExecutionResult !==
-        "FINISHED_WITH_RETURN"
+      executionResult &&
+      executionResult !== "FINISHED_WITH_RETURN"
     ) {
       throw new Error(
         `DealGuard transaction failed: ${
-          transaction.txExecutionResultName ??
-          transaction.txExecutionResult
+          executionResultName ||
+          executionResult
         }`
       );
     }
@@ -212,10 +223,8 @@ window.verifyDeal = async function () {
         "Reading verified result...";
     }
     /*
-     * Read the result using the unique case ID.
-     *
-     * LATEST_FINAL ensures the read uses
-     * finalized contract state.
+     * Read ONLY the result belonging to this
+     * specific case ID.
      */
     const rawResult =
       await client.readContract({
@@ -252,8 +261,8 @@ window.verifyDeal = async function () {
     );
     /*
      * Safety check:
-     * Make sure this result belongs to
-     * the current verification request.
+     * Make sure the result belongs to
+     * the current request.
      */
     if (
       result?.case_id &&
