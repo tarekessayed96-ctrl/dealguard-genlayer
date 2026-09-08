@@ -1,383 +1,216 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DealGuard — AI Deal Verification</title>
+  <title>DealGuard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+    
     body {
-      font-family: Inter, sans-serif;
-      background:
-        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 30%),
-        radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.08), transparent 28%),
-        #070709;
+      font-family: 'Inter', 'Cairo', sans-serif;
+      background: 
+        radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
+        #0a0a0f;
+      min-height: 100vh;
     }
+    
+    [lang="ar"] body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+    }
+    
     .glass {
-      background: rgba(255, 255, 255, 0.045);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .input {
-      width: 100%;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: rgba(0, 0, 0, 0.42);
-      border: 1px solid rgba(255, 255, 255, 0.10);
-      outline: none;
-      color: white;
-      font-size: 14px;
-      transition: 0.2s;
+    
+    .glass-strong {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
-    .input:focus {
-      border-color: rgba(167, 139, 250, 0.7);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.10);
+    
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
     }
-    .input::placeholder {
-      color: rgba(255, 255, 255, 0.30);
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .verify-button {
-      position: relative;
-      overflow: hidden;
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .verify-button::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        110deg,
-        transparent 20%,
-        rgba(255,255,255,0.35) 50%,
-        transparent 80%
-      );
-      transform: translateX(-120%);
-      transition: transform 0.7s;
+    
+    .input-glow:focus {
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2), 0 0 20px rgba(167, 139, 250, 0.1);
     }
-    .verify-button:hover::after {
-      transform: translateX(120%);
-    }
-    .feature {
-      border: 1px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.025);
-    }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
   </style>
 </head>
-<body class="text-white min-h-screen">
-  <!-- HEADER -->
-  <header class="max-w-6xl mx-auto px-5 pt-6">
+<body class="text-white">
+  <!-- Language Toggle -->
+  <button id="langToggle" class="fixed top-6 left-6 z-50 px-5 py-2.5 rounded-full glass-strong text-sm font-semibold hover:bg-white/10 transition-all duration-300 flex items-center gap-2">
+    <span>🌐</span>
+    <span id="langText">العربية</span>
+  </button>
+
+  <!-- Header -->
+  <header class="max-w-6xl mx-auto px-6 pt-8">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 rounded-xl bg-white text-black grid place-items-center font-black text-lg shadow-lg"
-        >
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xl font-black shadow-lg shadow-violet-500/30">
           D
         </div>
         <div>
-          <div class="font-extrabold tracking-tight">
-            DealGuard
-          </div>
-          <div class="text-[10px] uppercase tracking-[0.2em] text-white/30">
-            Deal Verification
-          </div>
+          <div class="font-bold text-lg tracking-tight">DealGuard</div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-white/40">AI Verification</div>
         </div>
       </div>
-      <div
-        class="flex items-center gap-2 px-3 py-2 rounded-full glass text-xs"
-      >
+      <div class="flex items-center gap-2 px-4 py-2 rounded-full glass text-xs">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-white/70">
-          GenLayer Active
-        </span>
+        <span class="text-white/60">GenLayer</span>
       </div>
     </div>
   </header>
-  <!-- MAIN -->
-  <main class="max-w-6xl mx-auto px-5 py-16">
-    <div class="grid lg:grid-cols-2 gap-12 items-start">
-      <!-- HERO -->
-      <section class="pt-4">
-        <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-[11px] text-white/50 mb-7"
-        >
-          <span>🛡️</span>
-          Decentralized Deal Intelligence
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-6 py-12">
+    <div class="grid lg:grid-cols-5 gap-8">
+      
+      <!-- Left: Hero & Form -->
+      <div class="lg:col-span-3 space-y-8">
+        <!-- Hero -->
+        <section class="animate-fade-in-up">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs text-white/50 mb-6">
+            <span>🛡️</span>
+            <span data-i18n="hero.badge">Decentralized Deal Intelligence</span>
+          </div>
+          
+          <h1 class="text-5xl sm:text-6xl font-black tracking-tight leading-[0.95] mb-6">
+            <span data-i18n="hero.title1">Don't trust</span><br>
+            <span data-i18n="hero.title2">the deal.</span><br>
+            <span class="gradient-text" data-i18n="hero.subtitle">Verify it.</span>
+          </h1>
+          
+          <p class="text-lg text-white/50 max-w-lg leading-relaxed" data-i18n="hero.desc">
+            DealGuard compares real web sources and uses GenLayer to determine whether an online deal is trustworthy.
+          </p>
+        </section>
+
+        <!-- Form -->
+        <section class="glass-strong rounded-3xl p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.1s">
+          <div id="error" class="hidden mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm"></div>
+          
+          <form id="dealForm" class="space-y-5">
+            <div>
+              <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.titleLabel">Deal Title *</label>
+              <input type="text" id="title" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all" data-i18n-placeholder="form.titlePlaceholder" placeholder="e.g., iPhone 15 Pro - 256GB">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.descLabel">Description *</label>
+              <textarea id="description" rows="3" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all resize-none" data-i18n-placeholder="form.descPlaceholder" placeholder="Describe the deal..."></textarea>
+            </div>
+            
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.dealUrlLabel">Deal URL *</label>
+                <input type="url" id="dealUrl" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all" placeholder="https://...">
+                <p class="mt-1.5 text-xs text-white/30" data-i18n="form.dealUrlHint">Must start with https://</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.refUrlLabel">Reference URL *</label>
+                <input type="url" id="secondUrl" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all" placeholder="https://...">
+                <p class="mt-1.5 text-xs text-white/30" data-i18n="form.refUrlHint">Reviews or official store</p>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div id="progress" class="hidden">
+              <div class="flex justify-between text-sm mb-2">
+                <span id="progressText" class="text-white/60">Connecting...</span>
+                <span id="progressPercent" class="text-violet-400 font-bold">0%</span>
+              </div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <button type="submit" id="verifyBtn" class="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold text-lg hover:from-violet-500 hover:to-fuchsia-500 transform hover:-translate-y-0.5 transition-all duration-300 shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2">
+              <span>🔍</span>
+              <span data-i18n="form.verifyBtn">Verify Deal</span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Result -->
+        <div id="result"></div>
+      </div>
+
+      <!-- Right: Sidebar -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Features -->
+        <div class="glass rounded-2xl p-6 animate-fade-in-up" style="animation-delay: 0.2s">
+          <h3 class="font-bold mb-4 text-white/80" data-i18n="features.title">Features</h3>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+              <span class="text-xl">🌐</span>
+              <div>
+                <div class="font-medium text-sm" data-i18n="features.webEvidence">Web Evidence</div>
+                <div class="text-xs text-white/40">Real source content</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+              <span class="text-xl">⚖️</span>
+              <div>
+                <div class="font-medium text-sm" data-i18n="features.comparison">Source Comparison</div>
+                <div class="text-xs text-white/40">Independent verification</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+              <span class="text-xl">🔐</span>
+              <div>
+                <div class="font-medium text-sm" data-i18n="features.uniqueCases">Unique Cases</div>
+                <div class="text-xs text-white/40">Request-specific IDs</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <h1
-          class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[-0.05em] leading-[0.92]"
-        >
-          Don't trust<br>
-          the deal.<br>
-          <span
-            class="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 via-purple-300 to-emerald-300"
-          >
-            Verify it.
-          </span>
-        </h1>
-        <p
-          class="mt-7 text-base sm:text-lg text-white/45 max-w-xl leading-relaxed"
-        >
-          DealGuard compares real web sources and uses
-          GenLayer to determine whether an online deal
-          is trustworthy, suspicious, or high risk.
-        </p>
-        <!-- FEATURES -->
-        <div class="grid sm:grid-cols-3 gap-3 mt-10">
-          <div class="feature rounded-2xl p-4">
-            <div class="text-xl mb-3">🌐</div>
-            <div class="text-sm font-bold">
-              Web Evidence
-            </div>
-            <div class="text-[11px] text-white/35 mt-1">
-              Real source content
-            </div>
-          </div>
-          <div class="feature rounded-2xl p-4">
-            <div class="text-xl mb-3">⚖️</div>
-            <div class="text-sm font-bold">
-              Source Comparison
-            </div>
-            <div class="text-[11px] text-white/35 mt-1">
-              Independent verification
-            </div>
-          </div>
-          <div class="feature rounded-2xl p-4">
-            <div class="text-xl mb-3">🔐</div>
-            <div class="text-sm font-bold">
-              Unique Cases
-            </div>
-            <div class="text-[11px] text-white/35 mt-1">
-              Request-specific results
-            </div>
+
+        <!-- History -->
+        <div class="glass rounded-2xl p-6 animate-fade-in-up" style="animation-delay: 0.3s">
+          <h3 class="font-bold mb-4 text-white/80" data-i18n="history.title">History</h3>
+          <div id="historyList">
+            <div class="text-center text-white/40 py-8 text-sm" data-i18n="history.empty">No previous verifications</div>
           </div>
         </div>
-        <div
-          class="mt-8 text-xs text-white/25 leading-relaxed max-w-lg"
-        >
-          Every verification receives a unique case ID.
-          Results are stored and retrieved for that specific
-          verification request.
-        </div>
-      </section>
-      <!-- VERIFICATION CARD -->
-      <section
-        class="glass rounded-3xl p-5 sm:p-7 shadow-2xl"
-      >
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <div class="font-bold">
-              Verify a Deal
-            </div>
-            <div class="text-xs text-white/30 mt-1">
-              Analyze two independent web sources
-            </div>
-          </div>
-          <div
-            class="text-[10px] px-2.5 py-1 rounded-lg bg-white/5 text-white/35 border border-white/5"
-          >
-            GENLAYER
-          </div>
-        </div>
-        <!-- TITLE -->
-        <div class="space-y-4">
-          <input
-            id="title"
-            class="input"
-            placeholder="Deal title"
-            value="Samsung Refrigerator 300L - $99"
-          >
-          <!-- DESCRIPTION -->
-          <textarea
-            id="description"
-            class="input h-28 resize-none"
-            placeholder="Describe the deal..."
-          >Brand new Samsung 300L refrigerator advertised for $99 with free shipping.</textarea>
-          <!-- PRIMARY URL -->
-          <div>
-            <label class="block text-[10px] uppercase tracking-wider text-white/30 mb-2">
-              Primary source
-            </label>
-            <input
-              id="dealUrl"
-              class="input font-mono text-xs"
-              placeholder="https://..."
-              value="https://www.samsung.com/us/refrigerators/"
-            >
-          </div>
-          <!-- SECOND SOURCE -->
-          <div>
-            <label class="block text-[10px] uppercase tracking-wider text-white/30 mb-2">
-              Independent source
-            </label>
-            <input
-              id="secondUrl"
-              class="input font-mono text-xs"
-              placeholder="https://..."
-              value="https://www.bestbuy.com/site/searchpage.jsp?st=samsung+refrigerator"
-            >
-          </div>
-          <!-- BUTTON -->
-          <button
-            id="verifyBtn"
-            onclick="verifyDeal()"
-            class="verify-button w-full bg-white text-black p-4 rounded-2xl font-extrabold text-sm tracking-wide transition hover:bg-white/90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            START VERIFICATION
-          </button>
-          <!-- ERROR -->
-          <div
-            id="error"
-            class="hidden bg-red-500/10 border border-red-500/20 text-red-300 p-4 rounded-2xl text-xs leading-relaxed"
-          ></div>
-        </div>
-      </section>
+      </div>
     </div>
-    <!-- RESULT -->
-    <section
-      id="result"
-      class="hidden mt-10 glass rounded-3xl p-5 sm:p-7"
-    >
-      <!-- RESULT HEADER -->
-      <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5"
-      >
-        <div>
-          <div
-            class="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-2"
-          >
-            Verification Result
-          </div>
-          <div
-            id="verdict"
-            class="inline-flex px-3 py-1.5 rounded-full border text-xs font-bold"
-          >
-            -
-          </div>
-        </div>
-        <div class="text-left sm:text-right">
-          <div
-            class="text-[10px] uppercase tracking-wider text-white/25 mb-1"
-          >
-            Risk Score
-          </div>
-          <div
-            id="score"
-            class="text-4xl sm:text-5xl font-black tracking-tight"
-          >
-            -
-          </div>
-        </div>
-      </div>
-      <!-- CONFIDENCE -->
-      <div
-        id="confidence"
-        class="mt-4 text-xs text-white/40"
-      ></div>
-      <!-- SUMMARY -->
-      <div class="mt-6">
-        <div
-          class="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-2"
-        >
-          Analysis
-        </div>
-        <div
-          id="summary"
-          class="text-sm text-white/65 bg-black/30 border border-white/5 p-5 rounded-2xl leading-relaxed"
-        ></div>
-      </div>
-      <!-- REASONS + EVIDENCE -->
-      <div class="grid lg:grid-cols-2 gap-5 mt-6">
-        <!-- REASONS -->
-        <div
-          class="bg-black/20 border border-white/5 rounded-2xl p-5"
-        >
-          <div class="flex items-center gap-2 mb-4">
-            <span>⚠️</span>
-            <h3 class="font-bold text-sm">
-              Risk Factors
-            </h3>
-          </div>
-          <ul
-            id="reasons"
-            class="list-disc pl-5 text-sm text-white/55 space-y-3 leading-relaxed"
-          ></ul>
-        </div>
-        <!-- EVIDENCE -->
-        <div
-          class="bg-black/20 border border-white/5 rounded-2xl p-5"
-        >
-          <div class="flex items-center gap-2 mb-4">
-            <span>🔎</span>
-            <h3 class="font-bold text-sm">
-              Evidence
-            </h3>
-          </div>
-          <ul
-            id="evidence"
-            class="list-disc pl-5 text-sm text-white/55 space-y-3 leading-relaxed"
-          ></ul>
-        </div>
-      </div>
-      <!-- PROOF -->
-      <div
-        class="mt-6 bg-black/30 border border-white/5 rounded-2xl p-5"
-      >
-        <div class="flex items-center gap-2 mb-5">
-          <span>⛓️</span>
-          <div>
-            <div class="font-bold text-sm">
-              Verification Proof
-            </div>
-            <div class="text-[10px] text-white/25 mt-1">
-              Request-specific GenLayer verification
-            </div>
-          </div>
-        </div>
-        <!-- CASE ID -->
-        <div class="mb-5">
-          <div
-            class="text-[10px] uppercase tracking-wider text-white/25 mb-2"
-          >
-            Case ID
-          </div>
-          <div
-            id="caseId"
-            class="text-[10px] sm:text-xs font-mono break-all text-white/45 bg-white/[0.03] p-3 rounded-xl"
-          ></div>
-        </div>
-        <!-- TRANSACTION -->
-        <div>
-          <div
-            class="text-[10px] uppercase tracking-wider text-white/25 mb-2"
-          >
-            Transaction
-          </div>
-          <div
-            id="txHash"
-            class="text-[10px] sm:text-xs font-mono break-all text-white/45 bg-white/[0.03] p-3 rounded-xl"
-          ></div>
-        </div>
-      </div>
-    </section>
-    <!-- FOOTER -->
-    <footer
-      class="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row gap-3 justify-between text-[10px] text-white/20"
-    >
-      <span>
-        DealGuard • Powered by GenLayer
-      </span>
-      <span>
-        Evidence-based verification
-      </span>
-    </footer>
   </main>
-  <!-- VITE ENTRY -->
-  <script
-    type="module"
-    src="/app.js"
-  ></script>
+
+  <!-- Footer -->
+  <footer class="max-w-6xl mx-auto px-6 py-8 mt-12 border-t border-white/10">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-white/30">
+      <span>DealGuard • Powered by GenLayer</span>
+      <span>Evidence-based verification</span>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
