@@ -1,8 +1,9 @@
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: "/dealguard-genlayer/",
-  server: {
-    port: 5173
+  base: './',
+  build: {
+    outDir: 'dist',
+    sourcemap: true
   }
 });
