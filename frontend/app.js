@@ -42,7 +42,7 @@ function createCaseId() {
   );
 }
 /*
- * Convert the contract response into a JavaScript object.
+ * Convert contract response to JavaScript object.
  */
 function parseVerification(rawResult) {
   if (!rawResult) {
@@ -60,12 +60,13 @@ function parseVerification(rawResult) {
   return rawResult;
 }
 /*
- * Read the verification belonging ONLY to this caseId.
+ * Read the result for THIS case only.
  *
- * We retry because the finalized state can take a little
- * time to become readable through the RPC after execution.
+ * We use LATEST_NONFINAL because the GenLayer Studio
+ * Accepted/decided state can contain the result before
+ * it becomes part of LATEST_FINAL.
  *
- * UNKNOWN is NOT treated as a successful verification.
+ * UNKNOWN is never accepted as a successful result.
  */
 async function readVerificationWithRetry(
   client,
@@ -74,33 +75,39 @@ async function readVerificationWithRetry(
   delayMs = 5000
 ) {
   let lastResult = null;
-  for (let attempt = 1; attempt <= attempts; attempt++) {
+  for (
+    let attempt = 1;
+    attempt <= attempts;
+    attempt++
+  ) {
     console.log(
-      `Reading verification ${attempt}/${attempts}`,
+      `DealGuard read attempt ${attempt}/${attempts}`,
       caseId
     );
     try {
       const rawResult =
         await client.readContract({
           address: CONTRACT_ADDRESS,
-          functionName: "get_verification",
+          functionName:
+            "get_verification",
           args: [caseId],
           transactionHashVariant:
-            TransactionHashVariant.LATEST_FINAL
+            TransactionHashVariant.LATEST_NONFINAL
         });
       console.log(
-        "Raw verification response:",
+        "DealGuard raw result:",
         rawResult
       );
       const result =
         parseVerification(rawResult);
       lastResult = result;
       console.log(
-        "Parsed verification:",
+        "DealGuard parsed result:",
         result
       );
       /*
-       * The result must belong to this exact request.
+       * Security check:
+       * result MUST belong to this request.
        */
       if (
         result?.case_id &&
@@ -110,64 +117,67 @@ async function readVerificationWithRetry(
           "Returned verification does not match this request."
         );
       }
-      /*
-       * A real verification has a known verdict.
-       */
       const verdict =
-        String(result?.verdict ?? "")
+        String(
+          result?.verdict ?? ""
+        )
           .trim()
           .toUpperCase();
+      /*
+       * Only accept a real DealGuard verdict.
+       */
       if (
         result?.case_id === caseId &&
-        ["SAFE", "RISKY", "HIGH_RISK"].includes(
-          verdict
-        )
+        [
+          "SAFE",
+          "RISKY",
+          "HIGH_RISK"
+        ].includes(verdict)
       ) {
         return {
           ...result,
           verdict
         };
       }
-      /*
-       * If we received UNKNOWN, keep waiting.
-       */
       console.log(
-        "Verification is not available yet. Retrying..."
+        "Verification is UNKNOWN. Retrying..."
       );
     } catch (error) {
       console.warn(
-        `Verification read attempt ${attempt} failed:`,
+        `DealGuard read attempt ${attempt} failed:`,
         error
       );
-      /*
-       * Do not immediately fail.
-       * RPC/state propagation can temporarily fail.
-       */
     }
     if (attempt < attempts) {
       const button =
-        document.getElementById("verifyBtn");
+        document.getElementById(
+          "verifyBtn"
+        );
       if (button) {
         button.innerText =
           `Waiting for verification... (${attempt}/${attempts})`;
       }
-      await new Promise((resolve) =>
-        setTimeout(resolve, delayMs)
+      await new Promise(
+        (resolve) =>
+          setTimeout(
+            resolve,
+            delayMs
+          )
       );
     }
   }
-  /*
-   * If all retries failed, return the last response
-   * only for diagnostics.
-   */
   return lastResult;
 }
 window.verifyDeal = async function () {
   hideError();
   const button =
-    document.getElementById("verifyBtn");
+    document.getElementById(
+      "verifyBtn"
+    );
   const title =
-    document.getElementById("title")?.value.trim();
+    document
+      .getElementById("title")
+      ?.value.trim();
   const description =
     document
       .getElementById("description")
@@ -180,6 +190,9 @@ window.verifyDeal = async function () {
     document
       .getElementById("secondUrl")
       ?.value.trim();
+  /*
+   * Validate inputs.
+   */
   if (
     !title ||
     !description ||
@@ -200,8 +213,12 @@ window.verifyDeal = async function () {
     );
     return;
   }
+  /*
+   * Detect wallet.
+   */
   const provider =
-    window.okxwallet || window.ethereum;
+    window.okxwallet ||
+    window.ethereum;
   if (!provider) {
     showError(
       "Please open DealGuard inside OKX Wallet."
@@ -209,6 +226,9 @@ window.verifyDeal = async function () {
     return;
   }
   try {
+    /*
+     * Connect wallet.
+     */
     if (button) {
       button.disabled = true;
       button.innerText =
@@ -216,7 +236,8 @@ window.verifyDeal = async function () {
     }
     const accounts =
       await provider.request({
-        method: "eth_requestAccounts"
+        method:
+          "eth_requestAccounts"
       });
     if (
       !accounts ||
@@ -226,14 +247,19 @@ window.verifyDeal = async function () {
         "No wallet account found."
       );
     }
-    const account = accounts[0];
+    const account =
+      accounts[0];
     console.log(
       "Wallet:",
       account
     );
+    /*
+     * Check chain.
+     */
     let chainId =
       await provider.request({
-        method: "eth_chainId"
+        method:
+          "eth_chainId"
       });
     console.log(
       "Current chain:",
@@ -259,7 +285,12 @@ window.verifyDeal = async function () {
           ]
         });
       } catch (err) {
-        if (err?.code === 4902) {
+        /*
+         * Chain doesn't exist in wallet.
+         */
+        if (
+          err?.code === 4902
+        ) {
           await provider.request({
             method:
               "wallet_addEthereumChain",
@@ -284,9 +315,13 @@ window.verifyDeal = async function () {
           throw err;
         }
       }
+      /*
+       * Verify chain after switch.
+       */
       chainId =
         await provider.request({
-          method: "eth_chainId"
+          method:
+            "eth_chainId"
         });
       if (
         chainId.toLowerCase() !==
@@ -297,6 +332,9 @@ window.verifyDeal = async function () {
         );
       }
     }
+    /*
+     * Create GenLayer client.
+     */
     if (button) {
       button.innerText =
         "Preparing GenLayer...";
@@ -308,10 +346,10 @@ window.verifyDeal = async function () {
         provider
       });
     /*
-     * IMPORTANT:
-     * This Case ID is the correlation ID for the request.
+     * Create UNIQUE request ID.
      *
-     * It is NOT the transaction hash.
+     * IMPORTANT:
+     * This is NOT the transaction hash.
      */
     const caseId =
       createCaseId();
@@ -319,6 +357,9 @@ window.verifyDeal = async function () {
       "DealGuard case ID:",
       caseId
     );
+    /*
+     * Submit analysis.
+     */
     if (button) {
       button.innerText =
         "Analyzing deal...";
@@ -342,26 +383,33 @@ window.verifyDeal = async function () {
       "GenLayer transaction:",
       txHash
     );
+    /*
+     * Wait until the transaction has a decision.
+     *
+     * We don't wait for FINAL here because we want
+     * to read the newly created verification from
+     * the current non-final state.
+     */
     if (button) {
       button.innerText =
-        "Waiting for GenLayer finalization...";
+        "Waiting for GenLayer decision...";
     }
-    /*
-     * Wait for actual finalized transaction state.
-     */
     const transaction =
       await client.waitForTransactionReceipt({
         hash: txHash,
-        waitUntil: "finalized",
-        interval: 5000,
-        retries: 120
+        waitUntil:
+          "decided",
+        interval:
+          5000,
+        retries:
+          120
       });
     console.log(
-      "Finalized transaction:",
+      "GenLayer decision:",
       transaction
     );
     /*
-     * Check contract execution result.
+     * Check execution status when available.
      */
     const executionResult =
       transaction?.txExecutionResult;
@@ -379,20 +427,13 @@ window.verifyDeal = async function () {
         }`
       );
     }
+    /*
+     * Read the request-specific verification.
+     */
     if (button) {
       button.innerText =
         "Reading verified result...";
     }
-    /*
-     * IMPORTANT:
-     *
-     * We read using the SAME caseId that was submitted.
-     *
-     * We never use txHash here.
-     *
-     * We also retry because the RPC may temporarily
-     * return the default UNKNOWN response.
-     */
     const result =
       await readVerificationWithRetry(
         client,
@@ -401,11 +442,11 @@ window.verifyDeal = async function () {
         5000
       );
     console.log(
-      "DealGuard verified result:",
+      "DealGuard final result:",
       result
     );
     /*
-     * A valid result must exist.
+     * No result.
      */
     if (!result) {
       throw new Error(
@@ -413,17 +454,18 @@ window.verifyDeal = async function () {
       );
     }
     /*
-     * Make sure the result belongs to this exact request.
+     * Verify correlation.
      */
     if (
-      result.case_id !== caseId
+      result.case_id !==
+      caseId
     ) {
       throw new Error(
         "Returned verification does not match this request."
       );
     }
     /*
-     * Never display UNKNOWN as a successful verification.
+     * Only accept valid verdicts.
      */
     const verdict =
       String(
@@ -443,7 +485,7 @@ window.verifyDeal = async function () {
       );
     }
     /*
-     * Display result.
+     * Show result.
      */
     const resultBox =
       document.getElementById(
@@ -453,14 +495,20 @@ window.verifyDeal = async function () {
       resultBox.style.display =
         "block";
     }
+    /*
+     * Risk score.
+     */
     const score =
       document.getElementById(
         "score"
       );
     if (score) {
       score.textContent =
-        `${result?.risk_score ?? 0}/100`;
+        `${result.risk_score ?? 0}/100`;
     }
+    /*
+     * Verdict.
+     */
     const verdictBox =
       document.getElementById(
         "verdict"
@@ -469,6 +517,9 @@ window.verifyDeal = async function () {
       verdictBox.textContent =
         verdict;
     }
+    /*
+     * Confidence.
+     */
     const confidence =
       document.getElementById(
         "confidence"
@@ -476,17 +527,23 @@ window.verifyDeal = async function () {
     if (confidence) {
       confidence.textContent =
         `Confidence: ${
-          result?.confidence ?? 0
+          result.confidence ?? 0
         }%`;
     }
+    /*
+     * Summary.
+     */
     const summary =
       document.getElementById(
         "summary"
       );
     if (summary) {
       summary.textContent =
-        result?.summary ?? "";
+        result.summary ?? "";
     }
+    /*
+     * Risk factors.
+     */
     const reasons =
       document.getElementById(
         "reasons"
@@ -495,7 +552,7 @@ window.verifyDeal = async function () {
       reasons.innerHTML =
         (
           Array.isArray(
-            result?.reasons
+            result.reasons
           )
             ? result.reasons
             : []
@@ -508,6 +565,9 @@ window.verifyDeal = async function () {
           )
           .join("");
     }
+    /*
+     * Evidence.
+     */
     const evidence =
       document.getElementById(
         "evidence"
@@ -516,7 +576,7 @@ window.verifyDeal = async function () {
       evidence.innerHTML =
         (
           Array.isArray(
-            result?.evidence
+            result.evidence
           )
             ? result.evidence
             : []
@@ -529,6 +589,9 @@ window.verifyDeal = async function () {
           )
           .join("");
     }
+    /*
+     * Case ID proof.
+     */
     const caseIdBox =
       document.getElementById(
         "caseId"
@@ -537,6 +600,9 @@ window.verifyDeal = async function () {
       caseIdBox.textContent =
         caseId;
     }
+    /*
+     * Transaction proof.
+     */
     const txHashBox =
       document.getElementById(
         "txHash"
@@ -545,10 +611,14 @@ window.verifyDeal = async function () {
       txHashBox.textContent =
         txHash;
     }
+    /*
+     * Complete.
+     */
     if (button) {
       button.innerText =
         "Verification complete ✓";
-      button.disabled = false;
+      button.disabled =
+        false;
     }
   } catch (error) {
     console.error(
@@ -561,7 +631,8 @@ window.verifyDeal = async function () {
         String(error)
     );
     if (button) {
-      button.disabled = false;
+      button.disabled =
+        false;
       button.innerText =
         "Verify Deal";
     }
