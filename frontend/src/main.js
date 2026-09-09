@@ -1,232 +1,257 @@
 import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionHashVariant } from "genlayer-js/types";
-import { t, setLang, getLang, toggleLang } from './i18n.js';
-import { ResultCard, HistoryList } from './components.js';
 
 const CONTRACT_ADDRESS = "0x2df8830eD829E347720076A2073bfb6CC1D5D791";
 const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 
-// ======== المساعدات ========
-function updateTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    el.textContent = t(key);
-  });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    el.placeholder = t(key);
-  });
-  document.getElementById('langText').textContent = getLang() === 'ar' ? 'English' : 'العربية';
-}
+// Language handling
+const translations = {
+    en: {
+        title: "Deal Title",
+        dealUrl: "Deal URL",
+        description: "Description",
+        refUrl: "Reference URL",
+        verify: "Initialize Verification",
+        verifying: "Processing...",
+        stages: {
+            connecting: "Connecting Neural Link...",
+            switching: "Switching Network...",
+            preparing: "Loading AI Modules...",
+            analyzing: "Analyzing Deal Data...",
+            waiting: "Consensus Building...",
+            reading: "Decrypting Results...",
+            complete: "Verification Complete"
+        },
+        results: {
+            safe: "SAFE",
+            risky: "RISKY",
+            highRisk: "HIGH RISK",
+            confidence: "Confidence Level",
+            riskScore: "Risk Score"
+        }
+    },
+    ar: {
+        title: "عنوان الصفقة",
+        dealUrl: "رابط الصفقة",
+        description: "الوصف",
+        refUrl: "رابط المرجع",
+        verify: "بدء التحقق",
+        verifying: "جاري المعالجة...",
+        stages: {
+            connecting: "جاري الاتصال...",
+            switching: "تبديل الشبكة...",
+            preparing: "تحميل الوحدات...",
+            analyzing: "تحليل البيانات...",
+            waiting: "بناء التوافق...",
+            reading: "فك التشفير...",
+            complete: "اكتمل التحقق"
+        },
+        results: {
+            safe: "آمن",
+            risky: "محفوف بالمخاطر",
+            highRisk: "خطير جداً",
+            confidence: "مستوى الثقة",
+            riskScore: "درجة الخطر"
+        }
+    }
+};
 
-function showError(message) {
-  const errorBox = document.getElementById('error');
-  errorBox.textContent = message;
-  errorBox.classList.remove('hidden');
+let currentLang = localStorage.getItem('dealguard-lang') || 'en';
+const t = (key) => translations[currentLang][key] || key;
+
+// UI Functions
+function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
 }
 
 function hideError() {
-  document.getElementById('error').classList.add('hidden');
+    document.getElementById('error').classList.add('hidden');
 }
 
-function updateProgress(message, percent) {
-  const progress = document.getElementById('progress');
-  const progressText = document.getElementById('progressText');
-  const progressPercent = document.getElementById('progressPercent');
-  const progressBar = document.getElementById('progressBar');
-  
-  progress.classList.remove('hidden');
-  progressText.textContent = message;
-  progressPercent.textContent = percent + '%';
-  progressBar.style.width = percent + '%';
+function updateProgress(text, percent) {
+    document.getElementById('progress').classList.remove('hidden');
+    document.getElementById('progressText').textContent = text;
+    document.getElementById('progressPercent').textContent = percent + '%';
+    document.getElementById('progressBar').style.width = percent + '%';
 }
 
-function hideProgress() {
-  document.getElementById('progress').classList.add('hidden');
-}
-
-function createCaseId() {
-  return crypto.randomUUID?.() || `case-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function saveToHistory(result, title) {
-  const history = JSON.parse(localStorage.getItem('dealguard-history') || '[]');
-  history.unshift({
-    ...result,
-    title,
-    timestamp: new Date().toISOString()
-  });
-  localStorage.setItem('dealguard-history', JSON.stringify(history.slice(0, 10)));
-  updateHistory();
-}
-
-function updateHistory() {
-  document.getElementById('historyList').innerHTML = HistoryList();
-}
-
-window.toggleLanguage = () => {
-  toggleLang();
-  updateTranslations();
-};
-
-window.clearHistory = () => {
-  localStorage.removeItem('dealguard-history');
-  updateHistory();
-};
-
-window.loadHistory = (index) => {
-  const history = JSON.parse(localStorage.getItem('dealguard-history') || '[]');
-  const item = history[index];
-  if (item) {
-    document.getElementById('title').value = item.title || '';
-    document.getElementById('description').value = item.description || '';
-    document.getElementById('dealUrl').value = item.dealUrl || '';
-    document.getElementById('secondUrl').value = item.secondUrl || '';
-  }
-};
-
-// ======== التحقق الرئيسي ========
-async function verifyDeal(e) {
-  e.preventDefault();
-  hideError();
-  
-  const button = document.getElementById('verifyBtn');
-  const resultDiv = document.getElementById('result');
-  
-  const title = document.getElementById('title').value.trim();
-  const description = document.getElementById('description').value.trim();
-  const dealUrl = document.getElementById('dealUrl').value.trim();
-  const secondUrl = document.getElementById('secondUrl').value.trim();
-  
-  if (!title || !description || !dealUrl || !secondUrl) {
-    showError(t('errors.fillAll'));
-    return;
-  }
-  
-  if (!dealUrl.startsWith('https://') || !secondUrl.startsWith('https://')) {
-    showError(t('errors.httpsRequired'));
-    return;
-  }
-  
-  const provider = window.okxwallet || window.ethereum;
-  if (!provider) {
-    showError(t('errors.installWallet'));
-    return;
-  }
-  
-  try {
-    button.disabled = true;
-    button.innerHTML = `<span class="animate-spin">↻</span> ${t('form.verifying')}`;
+function createResultHTML(result, verdict, caseId, txHash) {
+    const colors = {
+        SAFE: { border: 'result-safe', color: '#00ff88', icon: '✓' },
+        RISKY: { border: 'result-risky', color: '#ffaa00', icon: '⚠' },
+        HIGH_RISK: { border: 'result-danger', color: '#ff0044', icon: '✕' }
+    };
     
-    // Connect
-    updateProgress(t('stages.connecting'), 10);
-    const accounts = await provider.request({ method: 'eth_requestAccounts' });
-    const account = accounts[0];
+    const cfg = colors[verdict];
     
-    // Check chain
-    let chainId = await provider.request({ method: 'eth_chainId' });
-    if (chainId.toLowerCase() !== EXPECTED_CHAIN_ID_HEX) {
-      updateProgress(t('stages.switching'), 20);
-      try {
-        await provider.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: EXPECTED_CHAIN_ID_HEX }]
-        });
-      } catch (err) {
-        if (err?.code === 4902) {
-          await provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: EXPECTED_CHAIN_ID_HEX,
-              chainName: 'GenLayer StudioNet',
-              nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
-              rpcUrls: ['https://studio.genlayer.com/api/rpc']
-            }]
-          });
+    return `
+        <div class="holo-card ${cfg.border} rounded-2xl p-8 animate-fade-in">
+            <div class="text-center mb-8">
+                <div class="text-8xl mb-4" style="color: ${cfg.color}; text-shadow: 0 0 30px ${cfg.color}">
+                    ${cfg.icon}
+                </div>
+                <h2 class="text-4xl font-black mb-2" style="color: ${cfg.color}; font-family: 'Orbitron'">
+                    ${verdict}
+                </h2>
+                <p class="text-cyan-200/60">${result.summary}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 mb-8">
+                <div class="text-center p-6 bg-black/30 rounded-xl border border-cyan-500/20">
+                    <div class="text-5xl font-black mb-2" style="color: ${cfg.color}">
+                        ${result.risk_score}%
+                    </div>
+                    <div class="text-cyan-400 text-sm uppercase tracking-wider">${t('results.riskScore')}</div>
+                </div>
+                <div class="text-center p-6 bg-black/30 rounded-xl border border-cyan-500/20">
+                    <div class="text-5xl font-black mb-2 text-cyan-400">
+                        ${result.confidence}%
+                    </div>
+                    <div class="text-cyan-400 text-sm uppercase tracking-wider">${t('results.confidence')}</div>
+                </div>
+            </div>
+            
+            ${result.reasons?.length ? `
+                <div class="mb-6 p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+                    <h3 class="text-red-400 font-bold mb-3 uppercase tracking-wider">Risk Factors</h3>
+                    <ul class="space-y-2 text-cyan-200/70">
+                        ${result.reasons.map(r => `<li>› ${r}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            <div class="p-4 bg-black/50 rounded-lg font-mono text-xs text-cyan-600/50 overflow-x-auto">
+                <div>CASE_ID: ${caseId}</div>
+                <div>TX_HASH: ${txHash}</div>
+            </div>
+        </div>
+    `;
+}
+
+// Main verification
+async function verifyDeal() {
+    hideError();
+    
+    const btn = document.getElementById('verifyBtn');
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const dealUrl = document.getElementById('dealUrl').value.trim();
+    const secondUrl = document.getElementById('secondUrl').value.trim();
+    
+    if (!title || !description || !dealUrl || !secondUrl) {
+        showError('Please fill all fields');
+        return;
+    }
+    
+    const provider = window.okxwallet || window.ethereum;
+    if (!provider) {
+        showError('Please install OKX or MetaMask');
+        return;
+    }
+    
+    try {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="animate-pulse">◈</span> ${t('verifying')}`;
+        
+        updateProgress(t('stages.connecting'), 10);
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        
+        let chainId = await provider.request({ method: 'eth_chainId' });
+        if (chainId.toLowerCase() !== EXPECTED_CHAIN_ID_HEX) {
+            updateProgress(t('stages.switching'), 20);
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: EXPECTED_CHAIN_ID_HEX }]
+                });
+            } catch (err) {
+                if (err?.code === 4902) {
+                    await provider.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: EXPECTED_CHAIN_ID_HEX,
+                            chainName: 'GenLayer StudioNet',
+                            nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
+                            rpcUrls: ['https://studio.genlayer.com/api/rpc']
+                        }]
+                    });
+                }
+            }
         }
-      }
-    }
-    
-    // Prepare
-    updateProgress(t('stages.preparing'), 30);
-    const client = createClient({ chain: studionet, account, provider });
-    const caseId = createCaseId();
-    
-    // Analyze
-    updateProgress(t('stages.analyzing'), 40);
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS,
-      functionName: 'analyze_deal',
-      args: [caseId, title, description, dealUrl, secondUrl],
-      value: BigInt(0)
-    });
-    
-    // Wait
-    updateProgress(t('stages.waiting'), 60);
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      waitUntil: 'decided',
-      interval: 5000,
-      retries: 120
-    });
-    
-    if (receipt?.txExecutionResult && receipt.txExecutionResult !== 'FINISHED_WITH_RETURN') {
-      throw new Error('Transaction failed');
-    }
-    
-    // Read result
-    updateProgress(t('stages.reading'), 80);
-    let result = null;
-    for (let i = 0; i < 12; i++) {
-      try {
-        const raw = await client.readContract({
-          address: CONTRACT_ADDRESS,
-          functionName: 'get_verification',
-          args: [caseId],
-          transactionHashVariant: TransactionHashVariant.LATEST_NONFINAL
+        
+        updateProgress(t('stages.preparing'), 30);
+        const client = createClient({ chain: studionet, account, provider });
+        const caseId = crypto.randomUUID?.() || `case-${Date.now()}`;
+        
+        updateProgress(t('stages.analyzing'), 40);
+        const txHash = await client.writeContract({
+            address: CONTRACT_ADDRESS,
+            functionName: 'analyze_deal',
+            args: [caseId, title, description, dealUrl, secondUrl],
+            value: BigInt(0)
         });
-        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        if (parsed?.case_id === caseId && ['SAFE', 'RISKY', 'HIGH_RISK'].includes(parsed.verdict?.toUpperCase())) {
-          result = { ...parsed, verdict: parsed.verdict.toUpperCase() };
-          break;
+        
+        updateProgress(t('stages.waiting'), 60);
+        await client.waitForTransactionReceipt({
+            hash: txHash,
+            waitUntil: 'decided',
+            interval: 5000,
+            retries: 120
+        });
+        
+        updateProgress(t('stages.reading'), 80);
+        let result = null;
+        for (let i = 0; i < 12; i++) {
+            try {
+                const raw = await client.readContract({
+                    address: CONTRACT_ADDRESS,
+                    functionName: 'get_verification',
+                    args: [caseId],
+                    transactionHashVariant: TransactionHashVariant.LATEST_NONFINAL
+                });
+                const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                if (parsed?.case_id === caseId && ['SAFE', 'RISKY', 'HIGH_RISK'].includes(parsed.verdict?.toUpperCase())) {
+                    result = { ...parsed, verdict: parsed.verdict.toUpperCase() };
+                    break;
+                }
+            } catch (e) {}
+            await new Promise(r => setTimeout(r, 5000));
         }
-      } catch (e) {}
-      updateProgress(`${t('stages.reading')} (${i + 1}/12)`, 80 + (i / 12) * 15);
-      await new Promise(r => setTimeout(r, 5000));
+        
+        if (!result) throw new Error('No result');
+        
+        document.getElementById('result').innerHTML = createResultHTML(result, result.verdict, caseId, txHash);
+        document.getElementById('result').classList.remove('hidden');
+        
+        // Save to history
+        const history = JSON.parse(localStorage.getItem('dg-history') || '[]');
+        history.unshift({ ...result, title, timestamp: new Date().toISOString() });
+        localStorage.setItem('dg-history', JSON.stringify(history.slice(0, 10)));
+        
+        btn.innerHTML = `<span>◈</span> ${t('stages.complete')}`;
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = `<span>▶</span> ${t('verify')}`;
+        }, 2000);
+        
+    } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.innerHTML = `<span>▶</span> ${t('verify')}`;
     }
-    
-    if (!result) throw new Error('No result');
-    
-    // Display
-    hideProgress();
-    resultDiv.innerHTML = ResultCard(result, result.verdict, caseId, txHash);
-    saveToHistory(result, title);
-    
-    button.innerHTML = `<span>✓</span> ${t('stages.complete')}`;
-    setTimeout(() => {
-      button.disabled = false;
-      button.innerHTML = `<span>🔍</span> ${t('form.verifyBtn')}`;
-    }, 2000);
-    
-  } catch (error) {
-    console.error(error);
-    hideProgress();
-    showError(error.message || 'Unknown error');
-    button.disabled = false;
-    button.innerHTML = `<span>🔍</span> ${t('form.verifyBtn')}`;
-  }
 }
 
-// ======== التهيئة ========
+// Init
 document.addEventListener('DOMContentLoaded', () => {
-  // Set initial language
-  const savedLang = localStorage.getItem('dealguard-lang') || 'en';
-  setLang(savedLang);
-  updateTranslations();
-  updateHistory();
-  
-  // Event listeners
-  document.getElementById('dealForm').addEventListener('submit', verifyDeal);
-  document.getElementById('langToggle').addEventListener('click', window.toggleLanguage);
+    document.getElementById('verifyBtn').addEventListener('click', verifyDeal);
+    
+    document.getElementById('langToggle').addEventListener('click', () => {
+        currentLang = currentLang === 'en' ? 'ar' : 'en';
+        localStorage.setItem('dealguard-lang', currentLang);
+        location.reload();
+    });
 });
