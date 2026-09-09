@@ -5,62 +5,76 @@ import { TransactionHashVariant } from "genlayer-js/types";
 const CONTRACT_ADDRESS = "0x2df8830eD829E347720076A2073bfb6CC1D5D791";
 const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 
-// Language handling
 const translations = {
-    en: {
-        title: "Deal Title",
-        dealUrl: "Deal URL",
-        description: "Description",
-        refUrl: "Reference URL",
-        verify: "Initialize Verification",
-        verifying: "Processing...",
-        stages: {
-            connecting: "Connecting Neural Link...",
-            switching: "Switching Network...",
-            preparing: "Loading AI Modules...",
-            analyzing: "Analyzing Deal Data...",
-            waiting: "Consensus Building...",
-            reading: "Decrypting Results...",
-            complete: "Verification Complete"
-        },
-        results: {
-            safe: "SAFE",
-            risky: "RISKY",
-            highRisk: "HIGH RISK",
-            confidence: "Confidence Level",
-            riskScore: "Risk Score"
-        }
-    },
     ar: {
         title: "عنوان الصفقة",
-        dealUrl: "رابط الصفقة",
-        description: "الوصف",
+        desc: "وصف الصفقة",
+        dealUrl: "رابط الموقع",
         refUrl: "رابط المرجع",
-        verify: "بدء التحقق",
-        verifying: "جاري المعالجة...",
+        verify: "تحقق من الصفقة",
+        verifying: "جاري التحقق...",
         stages: {
-            connecting: "جاري الاتصال...",
-            switching: "تبديل الشبكة...",
-            preparing: "تحميل الوحدات...",
-            analyzing: "تحليل البيانات...",
-            waiting: "بناء التوافق...",
-            reading: "فك التشفير...",
-            complete: "اكتمل التحقق"
+            connecting: "جاري الاتصال بالمحفظة...",
+            switching: "التبديل إلى GenLayer...",
+            preparing: "تحضير الطلب...",
+            analyzing: "تحليل الصفقة بالذكاء الاصطناعي...",
+            waiting: "انتظار قرار الشبكة...",
+            reading: "قراءة النتيجة...",
+            complete: "اكتمل التحقق ✓"
         },
         results: {
-            safe: "آمن",
-            risky: "محفوف بالمخاطر",
-            highRisk: "خطير جداً",
-            confidence: "مستوى الثقة",
-            riskScore: "درجة الخطر"
-        }
+            safe: "✓ صفقة آمنة",
+            risky: "⚠ صفقة محفوفة بالمخاطر",
+            highRisk: "✕ صفقة خطيرة",
+            score: "درجة الخطر",
+            confidence: "نسبة الثقة"
+        },
+        history: "سجل التحققات",
+        empty: "لا توجد تحققات سابقة",
+        poweredBy: "مدعوم من GenLayer"
+    },
+    en: {
+        title: "Deal Title",
+        desc: "Description",
+        dealUrl: "Website URL",
+        refUrl: "Reference URL",
+        verify: "Verify Deal",
+        verifying: "Verifying...",
+        stages: {
+            connecting: "Connecting wallet...",
+            switching: "Switching to GenLayer...",
+            preparing: "Preparing request...",
+            analyzing: "AI analysis in progress...",
+            waiting: "Waiting for network decision...",
+            reading: "Reading results...",
+            complete: "Verification Complete ✓"
+        },
+        results: {
+            safe: "✓ Safe Deal",
+            risky: "⚠ Risky Deal",
+            highRisk: "✕ High Risk Deal",
+            score: "Risk Score",
+            confidence: "Confidence"
+        },
+        history: "Verification History",
+        empty: "No previous verifications",
+        poweredBy: "Powered by GenLayer"
     }
 };
 
-let currentLang = localStorage.getItem('dealguard-lang') || 'en';
-const t = (key) => translations[currentLang][key] || key;
+let currentLang = localStorage.getItem('dealguard-lang') || 'ar';
+const t = (key) => key.split('.').reduce((o, k) => o?.[k], translations[currentLang]) || key;
 
-// UI Functions
+function updateUI() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) el.textContent = t(key);
+    });
+    document.getElementById('langText').textContent = currentLang === 'ar' ? 'English' : 'العربية';
+    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = currentLang;
+}
+
 function showError(msg) {
     const el = document.getElementById('error');
     el.textContent = msg;
@@ -78,60 +92,51 @@ function updateProgress(text, percent) {
     document.getElementById('progressBar').style.width = percent + '%';
 }
 
-function createResultHTML(result, verdict, caseId, txHash) {
-    const colors = {
-        SAFE: { border: 'result-safe', color: '#00ff88', icon: '✓' },
-        RISKY: { border: 'result-risky', color: '#ffaa00', icon: '⚠' },
-        HIGH_RISK: { border: 'result-danger', color: '#ff0044', icon: '✕' }
+function createResultCard(result, verdict, caseId, txHash) {
+    const styles = {
+        SAFE: { class: 'result-safe', icon: '🌳', color: '#28a745', title: t('results.safe') },
+        RISKY: { class: 'result-risky', icon: '🍂', color: '#ffc107', title: t('results.risky') },
+        HIGH_RISK: { class: 'result-danger', icon: '🥀', color: '#dc3545', title: t('results.highRisk') }
     };
     
-    const cfg = colors[verdict];
+    const style = styles[verdict];
     
     return `
-        <div class="holo-card ${cfg.border} rounded-2xl p-8 animate-fade-in">
-            <div class="text-center mb-8">
-                <div class="text-8xl mb-4" style="color: ${cfg.color}; text-shadow: 0 0 30px ${cfg.color}">
-                    ${cfg.icon}
-                </div>
-                <h2 class="text-4xl font-black mb-2" style="color: ${cfg.color}; font-family: 'Orbitron'">
-                    ${verdict}
-                </h2>
-                <p class="text-cyan-200/60">${result.summary}</p>
+        <div class="organic-card ${style.class} p-8 animate-fade-in">
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-3">${style.icon}</div>
+                <h2 class="text-3xl font-bold mb-2" style="color: ${style.color}">${style.title}</h2>
+                <p class="text-gray-600">${result.summary}</p>
             </div>
             
-            <div class="grid grid-cols-2 gap-6 mb-8">
-                <div class="text-center p-6 bg-black/30 rounded-xl border border-cyan-500/20">
-                    <div class="text-5xl font-black mb-2" style="color: ${cfg.color}">
-                        ${result.risk_score}%
-                    </div>
-                    <div class="text-cyan-400 text-sm uppercase tracking-wider">${t('results.riskScore')}</div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="text-center p-4 bg-white/50 rounded-2xl">
+                    <div class="text-3xl font-bold" style="color: ${style.color}">${result.risk_score}%</div>
+                    <div class="text-sm text-gray-600">${t('results.score')}</div>
                 </div>
-                <div class="text-center p-6 bg-black/30 rounded-xl border border-cyan-500/20">
-                    <div class="text-5xl font-black mb-2 text-cyan-400">
-                        ${result.confidence}%
-                    </div>
-                    <div class="text-cyan-400 text-sm uppercase tracking-wider">${t('results.confidence')}</div>
+                <div class="text-center p-4 bg-white/50 rounded-2xl">
+                    <div class="text-3xl font-bold text-green-600">${result.confidence}%</div>
+                    <div class="text-sm text-gray-600">${t('results.confidence')}</div>
                 </div>
             </div>
             
             ${result.reasons?.length ? `
-                <div class="mb-6 p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
-                    <h3 class="text-red-400 font-bold mb-3 uppercase tracking-wider">Risk Factors</h3>
-                    <ul class="space-y-2 text-cyan-200/70">
-                        ${result.reasons.map(r => `<li>› ${r}</li>`).join('')}
+                <div class="mb-4 p-4 bg-white/60 rounded-2xl">
+                    <h3 class="font-bold text-red-600 mb-2">⚠️ أسباب الخطر</h3>
+                    <ul class="space-y-1 text-gray-700">
+                        ${result.reasons.map(r => `<li>• ${r}</li>`).join('')}
                     </ul>
                 </div>
             ` : ''}
             
-            <div class="p-4 bg-black/50 rounded-lg font-mono text-xs text-cyan-600/50 overflow-x-auto">
-                <div>CASE_ID: ${caseId}</div>
-                <div>TX_HASH: ${txHash}</div>
+            <div class="text-xs text-gray-500 font-mono bg-white/40 p-3 rounded-xl">
+                <div>Case: ${caseId}</div>
+                <div>TX: ${txHash}</div>
             </div>
         </div>
     `;
 }
 
-// Main verification
 async function verifyDeal() {
     hideError();
     
@@ -142,19 +147,19 @@ async function verifyDeal() {
     const secondUrl = document.getElementById('secondUrl').value.trim();
     
     if (!title || !description || !dealUrl || !secondUrl) {
-        showError('Please fill all fields');
+        showError(currentLang === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
         return;
     }
     
     const provider = window.okxwallet || window.ethereum;
     if (!provider) {
-        showError('Please install OKX or MetaMask');
+        showError(currentLang === 'ar' ? 'يرجى تثبيت محفظة' : 'Please install wallet');
         return;
     }
     
     try {
         btn.disabled = true;
-        btn.innerHTML = `<span class="animate-pulse">◈</span> ${t('verifying')}`;
+        btn.innerHTML = `<span class="animate-spin">🌿</span> ${t('verifying')}`;
         
         updateProgress(t('stages.connecting'), 10);
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
@@ -224,34 +229,73 @@ async function verifyDeal() {
         
         if (!result) throw new Error('No result');
         
-        document.getElementById('result').innerHTML = createResultHTML(result, result.verdict, caseId, txHash);
-        document.getElementById('result').classList.remove('hidden');
+        document.getElementById('result').innerHTML = createResultCard(result, result.verdict, caseId, txHash);
+        document.getElementByById('result').classList.remove('hidden');
         
-        // Save to history
+        // Save history
         const history = JSON.parse(localStorage.getItem('dg-history') || '[]');
         history.unshift({ ...result, title, timestamp: new Date().toISOString() });
         localStorage.setItem('dg-history', JSON.stringify(history.slice(0, 10)));
+        updateHistory();
         
-        btn.innerHTML = `<span>◈</span> ${t('stages.complete')}`;
+        btn.innerHTML = `🌳 ${t('stages.complete')}`;
         setTimeout(() => {
             btn.disabled = false;
-            btn.innerHTML = `<span>▶</span> ${t('verify')}`;
+            btn.innerHTML = `<span class="tree-icon text-2xl">🌿</span><span>${t('verify')}</span>`;
         }, 2000);
         
     } catch (err) {
         showError(err.message);
         btn.disabled = false;
-        btn.innerHTML = `<span>▶</span> ${t('verify')}`;
+        btn.innerHTML = `<span class="tree-icon text-2xl">🌿</span><span>${t('verify')}</span>`;
     }
 }
 
-// Init
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('verifyBtn').addEventListener('click', verifyDeal);
+function updateHistory() {
+    const history = JSON.parse(localStorage.getItem('dg-history') || '[]');
+    const container = document.getElementById('historyList');
     
+    if (history.length === 0) {
+        container.innerHTML = `<div class="text-center text-green-600/50 py-4">${t('empty')}</div>`;
+        return;
+    }
+    
+    container.innerHTML = history.map((item, i) => `
+        <div class="flex items-center justify-between p-4 bg-white/60 rounded-2xl hover:bg-white/80 transition cursor-pointer" onclick="loadHistory(${i})">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">${item.verdict === 'SAFE' ? '🌳' : item.verdict === 'RISKY' ? '🍂' : '🥀'}</span>
+                <div>
+                    <div class="font-bold text-green-800">${item.title}</div>
+                    <div class="text-xs text-green-600">${new Date(item.timestamp).toLocaleDateString()}</div>
+                </div>
+            </div>
+            <div class="font-bold ${item.verdict === 'SAFE' ? 'text-green-600' : item.verdict === 'RISKY' ? 'text-yellow-600' : 'text-red-600'}">
+                ${item.risk_score}%
+            </div>
+        </div>
+    `).join('');
+}
+
+window.loadHistory = (index) => {
+    const history = JSON.parse(localStorage.getItem('dg-history') || '[]');
+    const item = history[index];
+    if (item) {
+        document.getElementById('title').value = item.title || '';
+        document.getElementById('description').value = item.description || '';
+        document.getElementById('dealUrl').value = item.dealUrl || '';
+        document.getElementById('secondUrl').value = item.secondUrl || '';
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+    updateHistory();
+    
+    document.getElementById('verifyBtn').addEventListener('click', verifyDeal);
     document.getElementById('langToggle').addEventListener('click', () => {
-        currentLang = currentLang === 'en' ? 'ar' : 'en';
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
         localStorage.setItem('dealguard-lang', currentLang);
-        location.reload();
+        updateUI();
+        updateHistory();
     });
 });
