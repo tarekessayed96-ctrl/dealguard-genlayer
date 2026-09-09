@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DealGuard - حماية طبيعية للصفقات</title>
+    <title data-i18n="page.title">DealGuard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Tajawal', sans-serif;
+            font-family: 'Tajawal', 'Inter', sans-serif;
             background: linear-gradient(135deg, #f5f7f4 0%, #e8ebe6 100%);
             min-height: 100vh;
             color: #2c3e2d;
         }
-
-        /* Organic Shapes */
+        
+        [lang="en"] body { font-family: 'Inter', 'Tajawal', sans-serif; }
+        
         .organic-blob {
             position: absolute;
             border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
@@ -28,230 +25,106 @@
             opacity: 0.6;
             animation: morph 8s ease-in-out infinite;
         }
-
+        
         .blob-1 {
-            width: 400px;
-            height: 400px;
+            width: 400px; height: 400px;
             background: linear-gradient(135deg, #a8e6cf 0%, #7fcdbb 100%);
-            top: -100px;
-            right: -100px;
+            top: -100px; right: -100px;
         }
-
+        
         .blob-2 {
-            width: 300px;
-            height: 300px;
+            width: 300px; height: 300px;
             background: linear-gradient(135deg, #dcedc1 0%, #c5e99b 100%);
-            bottom: -50px;
-            left: -50px;
+            bottom: -50px; left: -50px;
             animation-delay: -2s;
         }
-
-        .blob-3 {
-            width: 250px;
-            height: 250px;
-            background: linear-gradient(135deg, #ffd3b6 0%, #ffaaa5 100%);
-            top: 50%;
-            left: 10%;
-            animation-delay: -4s;
-        }
-
+        
         @keyframes morph {
             0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-            25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
             50% { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
-            75% { border-radius: 60% 40% 60% 30% / 70% 30% 50% 60%; }
         }
-
-        /* Leaf Pattern Background */
-        .leaf-pattern {
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5c-5 10-15 15-15 25s10 15 15 15 15-5 15-15-10-15-15-25z' fill='%234a7c59' fill-opacity='0.03'/%3E%3C/svg%3E");
-        }
-
-        /* Organic Card */
+        
         .organic-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             border-radius: 30px;
-            box-shadow: 
-                0 10px 40px rgba(74, 124, 89, 0.1),
-                0 2px 8px rgba(74, 124, 89, 0.05);
+            box-shadow: 0 10px 40px rgba(74, 124, 89, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.6);
         }
-
-        /* Nature Input */
+        
         .nature-input {
             background: #fafbf9;
             border: 2px solid #e0e6dc;
             border-radius: 20px;
             transition: all 0.3s ease;
         }
-
+        
         .nature-input:focus {
             outline: none;
             border-color: #7fcdbb;
             box-shadow: 0 0 0 4px rgba(127, 205, 187, 0.2);
-            background: #fff;
         }
-
-        /* Organic Button */
+        
         .nature-btn {
             background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
             color: white;
             border-radius: 25px;
             box-shadow: 0 8px 25px rgba(74, 124, 89, 0.3);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
-
+        
         .nature-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 35px rgba(74, 124, 89, 0.4);
         }
-
-        .nature-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .nature-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        /* Result Cards */
-        .result-safe {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            border: 2px solid #28a745;
-        }
-
-        .result-risky {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            border: 2px solid #ffc107;
-        }
-
-        .result-danger {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            border: 2px solid #dc3545;
-        }
-
-        /* Tree Icon Animation */
-        @keyframes sway {
-            0%, 100% { transform: rotate(-2deg); }
-            50% { transform: rotate(2deg); }
-        }
-
-        .tree-icon {
-            animation: sway 3s ease-in-out infinite;
-            transform-origin: bottom center;
-        }
-
-        /* Organic Progress */
+        
+        .result-safe { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 2px solid #28a745; }
+        .result-risky { background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; }
+        .result-danger { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 2px solid #dc3545; }
+        
         .organic-progress {
             height: 12px;
             background: #e8ebe6;
             border-radius: 20px;
             overflow: hidden;
         }
-
+        
         .organic-progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #7fcdbb 0%, #4a7c59 100%);
             border-radius: 20px;
             transition: width 0.5s ease;
-            position: relative;
         }
-
-        .organic-progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f3f0;
-            border-radius: 5px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #7fcdbb;
-            border-radius: 5px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a7c59;
-        }
-
-        /* Floating Leaves */
-        .floating-leaf {
-            position: fixed;
-            font-size: 24px;
-            opacity: 0.3;
-            pointer-events: none;
-            animation: float-leaf 15s linear infinite;
-            z-index: 0;
-        }
-
-        @keyframes float-leaf {
-            0% { transform: translateY(100vh) rotate(0deg); }
-            100% { transform: translateY(-100px) rotate(360deg); }
-        }
+        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f3f0; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #7fcdbb; border-radius: 5px; }
     </style>
 </head>
-<body class="leaf-pattern relative overflow-x-hidden">
-    <!-- Organic Blobs -->
+<body class="relative overflow-x-hidden">
+    <!-- Blobs -->
     <div class="organic-blob blob-1"></div>
     <div class="organic-blob blob-2"></div>
-    <div class="organic-blob blob-3"></div>
-
-    <!-- Floating Leaves -->
-    <div class="floating-leaf" style="left: 10%; animation-delay: 0s;">🍃</div>
-    <div class="floating-leaf" style="left: 30%; animation-delay: 3s;">🌿</div>
-    <div class="floating-leaf" style="left: 60%; animation-delay: 6s;">🍀</div>
-    <div class="floating-leaf" style="left: 80%; animation-delay: 9s;">🌱</div>
 
     <!-- Language Toggle -->
-    <button id="langToggle" class="fixed top-6 left-6 z-50 px-4 py-2 organic-card text-sm font-bold text-green-700 hover:text-green-800 transition flex items-center gap-2">
-        <span>🌍</span>
+    <button id="langToggle" class="fixed top-6 left-6 z-50 px-4 py-2 organic-card text-sm font-bold text-green-700 hover:text-green-800 transition">
         <span id="langText">English</span>
     </button>
 
-    <!-- Main Container -->
+    <!-- Main -->
     <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
         
         <!-- Header -->
         <header class="text-center mb-10">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm mb-4">
-                <span class="tree-icon">🌳</span>
-                <span>مدعوم من GenLayer</span>
+                <span>🌳</span>
+                <span data-i18n="header.badge">مدعوم من GenLayer</span>
             </div>
             
-            <h1 class="text-5xl md:text-6xl font-bold text-green-800 mb-3">
-                DealGuard
-            </h1>
+            <h1 class="text-5xl md:text-6xl font-bold text-green-800 mb-3">DealGuard</h1>
             
-            <p class="text-xl text-green-600/70 max-w-lg mx-auto leading-relaxed">
-                حماية طبيعية لصفقاتك عبر الذكاء الاصطناعي والتدقيق اللامركزي
+            <p class="text-xl text-green-600/70 max-w-lg mx-auto leading-relaxed" data-i18n="header.subtitle">
+                حماية طبيعية لصفقاتك عبر الذكاء الاصطناعي
             </p>
         </header>
 
@@ -262,42 +135,42 @@
                 <!-- Form -->
                 <div class="space-y-6">
                     <div>
-                        <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
-                            <span>📝</span>
-                            <span>عنوان الصفقة</span>
+                        <label class="block text-green-800 font-bold mb-2" data-i18n="form.titleLabel">
+                            عنوان الصفقة
                         </label>
-                        <input type="text" id="title" class="nature-input w-full px-5 py-4 text-lg" placeholder="مثال: iPhone 15 Pro">
+                        <input type="text" id="title" class="nature-input w-full px-5 py-4 text-lg" 
+                               data-i18n-placeholder="form.titlePlaceholder" placeholder="مثال: iPhone 15 Pro">
                     </div>
 
                     <div>
-                        <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
-                            <span>📄</span>
-                            <span>وصف الصفقة</span>
+                        <label class="block text-green-800 font-bold mb-2" data-i18n="form.descLabel">
+                            وصف الصفقة
                         </label>
-                        <textarea id="description" rows="3" class="nature-input w-full px-5 py-4 text-lg resize-none" placeholder="صف تفاصيل الصفقة..."></textarea>
+                        <textarea id="description" rows="3" class="nature-input w-full px-5 py-4 text-lg resize-none"
+                                  data-i18n-placeholder="form.descPlaceholder" placeholder="صف تفاصيل الصفقة..."></textarea>
                     </div>
 
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
-                                <span>🔗</span>
-                                <span>رابط الموقع</span>
+                            <label class="block text-green-800 font-bold mb-2" data-i18n="form.dealUrlLabel">
+                                رابط الموقع
                             </label>
-                            <input type="url" id="dealUrl" class="nature-input w-full px-5 py-4 text-lg" placeholder="https://example.com">
+                            <input type="url" id="dealUrl" class="nature-input w-full px-5 py-4 text-lg" 
+                                   data-i18n-placeholder="form.urlPlaceholder" placeholder="https://example.com">
                         </div>
                         <div>
-                            <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
-                                <span>🔍</span>
-                                <span>رابط المرجع</span>
+                            <label class="block text-green-800 font-bold mb-2" data-i18n="form.refUrlLabel">
+                                رابط المرجع
                             </label>
-                            <input type="url" id="secondUrl" class="nature-input w-full px-5 py-4 text-lg" placeholder="https://reviews.com">
+                            <input type="url" id="secondUrl" class="nature-input w-full px-5 py-4 text-lg"
+                                   data-i18n-placeholder="form.refPlaceholder" placeholder="https://reviews.com">
                         </div>
                     </div>
 
                     <!-- Progress -->
                     <div id="progress" class="hidden">
                         <div class="flex justify-between text-green-700 text-sm mb-2 font-bold">
-                            <span id="progressText">جاري التحضير...</span>
+                            <span id="progressText">...</span>
                             <span id="progressPercent">0%</span>
                         </div>
                         <div class="organic-progress">
@@ -310,8 +183,8 @@
 
                     <!-- Button -->
                     <button id="verifyBtn" class="nature-btn w-full py-4 text-lg font-bold flex items-center justify-center gap-3">
-                        <span class="tree-icon text-2xl">🌿</span>
-                        <span>تحقق من الصفقة</span>
+                        <span>🌿</span>
+                        <span data-i18n="form.verifyBtn">تحقق من الصفقة</span>
                     </button>
                 </div>
             </div>
@@ -323,21 +196,17 @@
             <div class="organic-card p-6 mt-8">
                 <h2 class="text-green-800 font-bold text-xl mb-4 flex items-center gap-2">
                     <span>📚</span>
-                    <span>سجل التحققات</span>
+                    <span data-i18n="history.title">سجل التحققات</span>
                 </h2>
-                <div id="historyList" class="space-y-3">
-                    <div class="text-center text-green-600/50 py-4">لا توجد تحققات سابقة</div>
+                <div id="historyList">
+                    <div class="text-center text-green-600/50 py-4" data-i18n="history.empty">لا توجد تحققات</div>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
         <footer class="mt-12 text-center">
-            <div class="flex items-center justify-center gap-2 mb-2">
-                <span class="text-2xl">🌲</span>
-                <span class="text-green-800 font-bold">DealGuard</span>
-            </div>
-            <p class="text-green-600/60 text-sm">
+            <p class="text-green-600/60 text-sm" data-i18n="footer.text">
                 نحو صفقات أكثر أماناً مع GenLayer
             </p>
         </footer>
