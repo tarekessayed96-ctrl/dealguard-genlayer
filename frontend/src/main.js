@@ -7,72 +7,107 @@ const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 
 const translations = {
     ar: {
-        title: "عنوان الصفقة",
-        desc: "وصف الصفقة",
-        dealUrl: "رابط الموقع",
-        refUrl: "رابط المرجع",
-        verify: "تحقق من الصفقة",
+        "page.title": "DealGuard - حماية الصفقات",
+        "header.badge": "مدعوم من GenLayer",
+        "header.subtitle": "حماية طبيعية لصفقاتك عبر الذكاء الاصطناعي",
+        "form.titleLabel": "عنوان الصفقة",
+        "form.titlePlaceholder": "مثال: iPhone 15 Pro",
+        "form.descLabel": "وصف الصفقة",
+        "form.descPlaceholder": "صف تفاصيل الصفقة...",
+        "form.dealUrlLabel": "رابط الموقع",
+        "form.urlPlaceholder": "https://example.com",
+        "form.refUrlLabel": "رابط المرجع",
+        "form.refPlaceholder": "https://reviews.com",
+        "form.verifyBtn": "تحقق من الصفقة",
+        "history.title": "سجل التحققات",
+        "history.empty": "لا توجد تحققات سابقة",
+        "footer.text": "نحو صفقات أكثر أماناً مع GenLayer",
         verifying: "جاري التحقق...",
         stages: {
-            connecting: "جاري الاتصال بالمحفظة...",
+            connecting: "جاري الاتصال...",
             switching: "التبديل إلى GenLayer...",
             preparing: "تحضير الطلب...",
-            analyzing: "تحليل الصفقة بالذكاء الاصطناعي...",
-            waiting: "انتظار قرار الشبكة...",
+            analyzing: "تحليل الصفقة...",
+            waiting: "انتظار القرار...",
             reading: "قراءة النتيجة...",
-            complete: "اكتمل التحقق ✓"
+            complete: "✓ اكتمل"
         },
         results: {
             safe: "✓ صفقة آمنة",
-            risky: "⚠ صفقة محفوفة بالمخاطر",
-            highRisk: "✕ صفقة خطيرة",
+            risky: "⚠ محفوفة بالمخاطر",
+            highRisk: "✕ خطيرة",
             score: "درجة الخطر",
-            confidence: "نسبة الثقة"
-        },
-        history: "سجل التحققات",
-        empty: "لا توجد تحققات سابقة",
-        poweredBy: "مدعوم من GenLayer"
+            confidence: "الثقة"
+        }
     },
     en: {
-        title: "Deal Title",
-        desc: "Description",
-        dealUrl: "Website URL",
-        refUrl: "Reference URL",
-        verify: "Verify Deal",
+        "page.title": "DealGuard - Deal Protection",
+        "header.badge": "Powered by GenLayer",
+        "header.subtitle": "Natural protection for your deals with AI",
+        "form.titleLabel": "Deal Title",
+        "form.titlePlaceholder": "e.g. iPhone 15 Pro",
+        "form.descLabel": "Description",
+        "form.descPlaceholder": "Describe your deal...",
+        "form.dealUrlLabel": "Website URL",
+        "form.urlPlaceholder": "https://example.com",
+        "form.refUrlLabel": "Reference URL",
+        "form.refPlaceholder": "https://reviews.com",
+        "form.verifyBtn": "Verify Deal",
+        "history.title": "Verification History",
+        "history.empty": "No previous verifications",
+        "footer.text": "Towards safer deals with GenLayer",
         verifying: "Verifying...",
         stages: {
-            connecting: "Connecting wallet...",
+            connecting: "Connecting...",
             switching: "Switching to GenLayer...",
-            preparing: "Preparing request...",
-            analyzing: "AI analysis in progress...",
-            waiting: "Waiting for network decision...",
-            reading: "Reading results...",
-            complete: "Verification Complete ✓"
+            preparing: "Preparing...",
+            analyzing: "Analyzing deal...",
+            waiting: "Waiting...",
+            reading: "Reading result...",
+            complete: "✓ Complete"
         },
         results: {
             safe: "✓ Safe Deal",
-            risky: "⚠ Risky Deal",
-            highRisk: "✕ High Risk Deal",
+            risky: "⚠ Risky",
+            highRisk: "✕ High Risk",
             score: "Risk Score",
             confidence: "Confidence"
-        },
-        history: "Verification History",
-        empty: "No previous verifications",
-        poweredBy: "Powered by GenLayer"
+        }
     }
 };
 
 let currentLang = localStorage.getItem('dealguard-lang') || 'ar';
-const t = (key) => key.split('.').reduce((o, k) => o?.[k], translations[currentLang]) || key;
+
+function t(key) {
+    return translations[currentLang]?.[key] || key;
+}
 
 function updateUI() {
+    // Update HTML lang and dir
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    
+    // Update toggle button text
+    document.getElementById('langText').textContent = currentLang === 'ar' ? 'English' : 'العربية';
+    
+    // Update all elements with data-i18n
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (key) el.textContent = t(key);
+        if (translations[currentLang][key]) {
+            el.textContent = translations[currentLang][key];
+        }
     });
-    document.getElementById('langText').textContent = currentLang === 'ar' ? 'English' : 'العربية';
-    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = currentLang;
+    
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[currentLang][key]) {
+            el.placeholder = translations[currentLang][key];
+        }
+    });
+    
+    // Update page title
+    document.title = t('page.title');
 }
 
 function showError(msg) {
@@ -100,6 +135,7 @@ function createResultCard(result, verdict, caseId, txHash) {
     };
     
     const style = styles[verdict];
+    const reasonsLabel = currentLang === 'ar' ? 'أسباب الخطر' : 'Risk Factors';
     
     return `
         <div class="organic-card ${style.class} p-8 animate-fade-in">
@@ -122,7 +158,7 @@ function createResultCard(result, verdict, caseId, txHash) {
             
             ${result.reasons?.length ? `
                 <div class="mb-4 p-4 bg-white/60 rounded-2xl">
-                    <h3 class="font-bold text-red-600 mb-2">⚠️ أسباب الخطر</h3>
+                    <h3 class="font-bold text-red-600 mb-2">⚠️ ${reasonsLabel}</h3>
                     <ul class="space-y-1 text-gray-700">
                         ${result.reasons.map(r => `<li>• ${r}</li>`).join('')}
                     </ul>
@@ -230,7 +266,7 @@ async function verifyDeal() {
         if (!result) throw new Error('No result');
         
         document.getElementById('result').innerHTML = createResultCard(result, result.verdict, caseId, txHash);
-        document.getElementByById('result').classList.remove('hidden');
+        document.getElementById('result').classList.remove('hidden');
         
         // Save history
         const history = JSON.parse(localStorage.getItem('dg-history') || '[]');
@@ -241,13 +277,13 @@ async function verifyDeal() {
         btn.innerHTML = `🌳 ${t('stages.complete')}`;
         setTimeout(() => {
             btn.disabled = false;
-            btn.innerHTML = `<span class="tree-icon text-2xl">🌿</span><span>${t('verify')}</span>`;
+            btn.innerHTML = `<span>🌿</span><span>${t('form.verifyBtn')}</span>`;
         }, 2000);
         
     } catch (err) {
         showError(err.message);
         btn.disabled = false;
-        btn.innerHTML = `<span class="tree-icon text-2xl">🌿</span><span>${t('verify')}</span>`;
+        btn.innerHTML = `<span>🌿</span><span>${t('form.verifyBtn')}</span>`;
     }
 }
 
@@ -256,7 +292,7 @@ function updateHistory() {
     const container = document.getElementById('historyList');
     
     if (history.length === 0) {
-        container.innerHTML = `<div class="text-center text-green-600/50 py-4">${t('empty')}</div>`;
+        container.innerHTML = `<div class="text-center text-green-600/50 py-4">${t('history.empty')}</div>`;
         return;
     }
     
@@ -266,7 +302,7 @@ function updateHistory() {
                 <span class="text-2xl">${item.verdict === 'SAFE' ? '🌳' : item.verdict === 'RISKY' ? '🍂' : '🥀'}</span>
                 <div>
                     <div class="font-bold text-green-800">${item.title}</div>
-                    <div class="text-xs text-green-600">${new Date(item.timestamp).toLocaleDateString()}</div>
+                    <div class="text-xs text-green-600">${new Date(item.timestamp).toLocaleDateString(currentLang === 'ar' ? 'ar-SA' : 'en-US')}</div>
                 </div>
             </div>
             <div class="font-bold ${item.verdict === 'SAFE' ? 'text-green-600' : item.verdict === 'RISKY' ? 'text-yellow-600' : 'text-red-600'}">
@@ -292,6 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHistory();
     
     document.getElementById('verifyBtn').addEventListener('click', verifyDeal);
+    
     document.getElementById('langToggle').addEventListener('click', () => {
         currentLang = currentLang === 'ar' ? 'en' : 'ar';
         localStorage.setItem('dealguard-lang', currentLang);
