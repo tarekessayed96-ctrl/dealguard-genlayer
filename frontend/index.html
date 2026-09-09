@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DealGuard // Neural Verification</title>
+    <title>DealGuard - حماية طبيعية للصفقات</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,397 +13,336 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-pink: #ff00ff;
-            --neon-purple: #9d00ff;
-            --dark-bg: #050508;
-            --glass: rgba(0, 243, 255, 0.03);
-        }
-
         body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--dark-bg);
-            color: #fff;
-            overflow-x: hidden;
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #f5f7f4 0%, #e8ebe6 100%);
             min-height: 100vh;
+            color: #2c3e2d;
         }
 
-        /* Animated Grid Background */
-        .cyber-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            perspective: 1000px;
-            transform-style: preserve-3d;
-            animation: gridMove 20s linear infinite;
-            pointer-events: none;
-            z-index: 0;
+        /* Organic Shapes */
+        .organic-blob {
+            position: absolute;
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            filter: blur(40px);
+            opacity: 0.6;
+            animation: morph 8s ease-in-out infinite;
         }
 
-        @keyframes gridMove {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(50px); }
-        }
-
-        /* Floating Orbs */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .orb-1 {
+        .blob-1 {
             width: 400px;
             height: 400px;
-            background: var(--neon-cyan);
+            background: linear-gradient(135deg, #a8e6cf 0%, #7fcdbb 100%);
             top: -100px;
             right: -100px;
-            animation: float 8s ease-in-out infinite;
         }
 
-        .orb-2 {
+        .blob-2 {
             width: 300px;
             height: 300px;
-            background: var(--neon-pink);
+            background: linear-gradient(135deg, #dcedc1 0%, #c5e99b 100%);
             bottom: -50px;
             left: -50px;
-            animation: float 10s ease-in-out infinite reverse;
+            animation-delay: -2s;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -30px) scale(1.1); }
+        .blob-3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #ffd3b6 0%, #ffaaa5 100%);
+            top: 50%;
+            left: 10%;
+            animation-delay: -4s;
         }
 
-        /* Holographic Card */
-        .holo-card {
-            background: linear-gradient(135deg, 
-                rgba(0, 243, 255, 0.05) 0%,
-                rgba(157, 0, 255, 0.05) 50%,
-                rgba(255, 0, 255, 0.05) 100%);
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            backdrop-filter: blur(20px);
-            position: relative;
-            overflow: hidden;
+        @keyframes morph {
+            0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+            50% { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
+            75% { border-radius: 60% 40% 60% 30% / 70% 30% 50% 60%; }
         }
 
-        .holo-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent 30%,
-                rgba(0, 243, 255, 0.1) 50%,
-                transparent 70%
-            );
-            transform: rotate(45deg);
-            animation: holoShine 6s infinite;
+        /* Leaf Pattern Background */
+        .leaf-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5c-5 10-15 15-15 25s10 15 15 15 15-5 15-15-10-15-15-25z' fill='%234a7c59' fill-opacity='0.03'/%3E%3C/svg%3E");
         }
 
-        @keyframes holoShine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
+        /* Organic Card */
+        .organic-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 
+                0 10px 40px rgba(74, 124, 89, 0.1),
+                0 2px 8px rgba(74, 124, 89, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
-        /* Glitch Text Effect */
-        .glitch {
-            font-family: 'Orbitron', sans-serif;
-            position: relative;
-            color: #fff;
+        /* Nature Input */
+        .nature-input {
+            background: #fafbf9;
+            border: 2px solid #e0e6dc;
+            border-radius: 20px;
+            transition: all 0.3s ease;
         }
 
-        .glitch::before,
-        .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .glitch::before {
-            color: var(--neon-cyan);
-            animation: glitch-1 2s infinite;
-            clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
-        }
-
-        .glitch::after {
-            color: var(--neon-pink);
-            animation: glitch-2 2s infinite;
-            clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
-        }
-
-        @keyframes glitch-1 {
-            0%, 100% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-        }
-
-        @keyframes glitch-2 {
-            0%, 100% { transform: translate(0); }
-            20% { transform: translate(2px, -2px); }
-            40% { transform: translate(2px, 2px); }
-        }
-
-        /* Neon Button */
-        .neon-btn {
-            background: transparent;
-            border: 2px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            font-family: 'Orbitron', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
-            transition: 0.3s;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3),
-                        inset 0 0 20px rgba(0, 243, 255, 0.1);
-        }
-
-        .neon-btn:hover {
-            background: var(--neon-cyan);
-            color: #000;
-            box-shadow: 0 0 60px rgba(0, 243, 255, 0.6),
-                        0 0 100px rgba(0, 243, 255, 0.4);
-        }
-
-        .neon-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: 0.5s;
-        }
-
-        .neon-btn:hover::before {
-            left: 100%;
-        }
-
-        /* Scanning Line */
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--neon-cyan);
-            box-shadow: 0 0 10px var(--neon-cyan);
-            animation: scan 3s linear infinite;
-            opacity: 0.5;
-        }
-
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-
-        /* Custom Input */
-        .cyber-input {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            color: var(--neon-cyan);
-            font-family: 'Rajdhani', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .cyber-input:focus {
+        .nature-input:focus {
             outline: none;
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3),
-                        inset 0 0 20px rgba(0, 243, 255, 0.05);
+            border-color: #7fcdbb;
+            box-shadow: 0 0 0 4px rgba(127, 205, 187, 0.2);
+            background: #fff;
+        }
+
+        /* Organic Button */
+        .nature-btn {
+            background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
+            color: white;
+            border-radius: 25px;
+            box-shadow: 0 8px 25px rgba(74, 124, 89, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nature-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(74, 124, 89, 0.4);
+        }
+
+        .nature-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .nature-btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         /* Result Cards */
         .result-safe {
-            border-color: #00ff88;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
         }
 
         .result-risky {
-            border-color: #ffaa00;
-            box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
         }
 
         .result-danger {
-            border-color: #ff0044;
-            box-shadow: 0 0 30px rgba(255, 0, 68, 0.3);
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
         }
 
-        /* Progress Ring */
-        .progress-ring {
-            transform: rotate(-90deg);
+        /* Tree Icon Animation */
+        @keyframes sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
         }
 
-        .progress-ring-circle {
-            transition: stroke-dashoffset 0.5s;
-            filter: drop-shadow(0 0 5px currentColor);
+        .tree-icon {
+            animation: sway 3s ease-in-out infinite;
+            transform-origin: bottom center;
         }
 
-        /* Terminal Text */
-        .terminal {
-            font-family: 'Courier New', monospace;
-            color: #00ff00;
+        /* Organic Progress */
+        .organic-progress {
+            height: 12px;
+            background: #e8ebe6;
+            border-radius: 20px;
+            overflow: hidden;
         }
 
-        /* Hexagon Pattern */
-        .hex-bg {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300f3ff' fill-opacity='0.05'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        .organic-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7fcdbb 0%, #4a7c59 100%);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .organic-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
-
         ::-webkit-scrollbar-track {
-            background: #050508;
+            background: #f1f3f0;
+            border-radius: 5px;
         }
-
         ::-webkit-scrollbar-thumb {
-            background: var(--neon-cyan);
-            border-radius: 4px;
+            background: #7fcdbb;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a7c59;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .glitch {
-                font-size: 2rem !important;
-            }
+        /* Floating Leaves */
+        .floating-leaf {
+            position: fixed;
+            font-size: 24px;
+            opacity: 0.3;
+            pointer-events: none;
+            animation: float-leaf 15s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes float-leaf {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
         }
     </style>
 </head>
-<body class="hex-bg">
-    <!-- Background Effects -->
-    <div class="cyber-grid"></div>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+<body class="leaf-pattern relative overflow-x-hidden">
+    <!-- Organic Blobs -->
+    <div class="organic-blob blob-1"></div>
+    <div class="organic-blob blob-2"></div>
+    <div class="organic-blob blob-3"></div>
+
+    <!-- Floating Leaves -->
+    <div class="floating-leaf" style="left: 10%; animation-delay: 0s;">🍃</div>
+    <div class="floating-leaf" style="left: 30%; animation-delay: 3s;">🌿</div>
+    <div class="floating-leaf" style="left: 60%; animation-delay: 6s;">🍀</div>
+    <div class="floating-leaf" style="left: 80%; animation-delay: 9s;">🌱</div>
 
     <!-- Language Toggle -->
-    <button id="langToggle" class="fixed top-6 left-6 z-50 px-4 py-2 holo-card rounded-lg text-cyan-400 text-sm font-bold hover:text-cyan-300 transition">
-        <span class="mr-2">◈</span>
-        <span id="langText">AR</span>
+    <button id="langToggle" class="fixed top-6 left-6 z-50 px-4 py-2 organic-card text-sm font-bold text-green-700 hover:text-green-800 transition flex items-center gap-2">
+        <span>🌍</span>
+        <span id="langText">English</span>
     </button>
 
     <!-- Main Container -->
-    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
         
         <!-- Header -->
-        <header class="text-center mb-12">
-            <div class="inline-block mb-4 px-4 py-1 border border-cyan-500/30 rounded-full text-xs text-cyan-400 tracking-widest uppercase">
-                Neural Network Active
+        <header class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm mb-4">
+                <span class="tree-icon">🌳</span>
+                <span>مدعوم من GenLayer</span>
             </div>
             
-            <h1 class="glitch text-6xl md:text-8xl font-black mb-4" data-text="DEALGUARD">
-                DEALGUARD
+            <h1 class="text-5xl md:text-6xl font-bold text-green-800 mb-3">
+                DealGuard
             </h1>
             
-            <p class="text-xl text-cyan-200/60 font-light tracking-wider">
-                AI-Powered Deal Verification System
+            <p class="text-xl text-green-600/70 max-w-lg mx-auto leading-relaxed">
+                حماية طبيعية لصفقاتك عبر الذكاء الاصطناعي والتدقيق اللامركزي
             </p>
         </header>
 
-        <!-- Main Interface -->
-        <main class="w-full max-w-4xl">
-            
-            <!-- Input Section -->
-            <div class="holo-card rounded-2xl p-8 mb-8">
-                <div class="scan-line"></div>
+        <!-- Main Card -->
+        <main class="w-full max-w-3xl">
+            <div class="organic-card p-8 md:p-10">
                 
-                <div class="grid md:grid-cols-2 gap-6 mb-6">
-                    <div class="space-y-2">
-                        <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
-                            // Deal Title
+                <!-- Form -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
+                            <span>📝</span>
+                            <span>عنوان الصفقة</span>
                         </label>
-                        <input type="text" id="title" class="cyber-input w-full px-4 py-3 rounded-lg text-lg" placeholder="Enter deal title...">
+                        <input type="text" id="title" class="nature-input w-full px-5 py-4 text-lg" placeholder="مثال: iPhone 15 Pro">
                     </div>
-                    
-                    <div class="space-y-2">
-                        <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
-                            // Deal URL
+
+                    <div>
+                        <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
+                            <span>📄</span>
+                            <span>وصف الصفقة</span>
                         </label>
-                        <input type="url" id="dealUrl" class="cyber-input w-full px-4 py-3 rounded-lg text-lg" placeholder="https://...">
+                        <textarea id="description" rows="3" class="nature-input w-full px-5 py-4 text-lg resize-none" placeholder="صف تفاصيل الصفقة..."></textarea>
                     </div>
-                </div>
 
-                <div class="space-y-2 mb-6">
-                    <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
-                        // Description
-                    </label>
-                    <textarea id="description" rows="3" class="cyber-input w-full px-4 py-3 rounded-lg text-lg resize-none" placeholder="Describe the deal..."></textarea>
-                </div>
-
-                <div class="space-y-2 mb-8">
-                    <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
-                        // Reference URL
-                    </label>
-                    <input type="url" id="secondUrl" class="cyber-input w-full px-4 py-3 rounded-lg text-lg" placeholder="https://...">
-                </div>
-
-                <!-- Progress Bar -->
-                <div id="progress" class="hidden mb-6">
-                    <div class="flex justify-between text-cyan-400 text-sm mb-2 font-bold">
-                        <span id="progressText">Initializing...</span>
-                        <span id="progressPercent">0%</span>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
+                                <span>🔗</span>
+                                <span>رابط الموقع</span>
+                            </label>
+                            <input type="url" id="dealUrl" class="nature-input w-full px-5 py-4 text-lg" placeholder="https://example.com">
+                        </div>
+                        <div>
+                            <label class="block text-green-800 font-bold mb-2 flex items-center gap-2">
+                                <span>🔍</span>
+                                <span>رابط المرجع</span>
+                            </label>
+                            <input type="url" id="secondUrl" class="nature-input w-full px-5 py-4 text-lg" placeholder="https://reviews.com">
+                        </div>
                     </div>
-                    <div class="h-2 bg-black/50 rounded-full overflow-hidden border border-cyan-500/30">
-                        <div id="progressBar" class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+
+                    <!-- Progress -->
+                    <div id="progress" class="hidden">
+                        <div class="flex justify-between text-green-700 text-sm mb-2 font-bold">
+                            <span id="progressText">جاري التحضير...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="organic-progress">
+                            <div id="progressBar" class="organic-progress-bar" style="width: 0%"></div>
+                        </div>
                     </div>
+
+                    <!-- Error -->
+                    <div id="error" class="hidden p-4 rounded-2xl bg-red-100 text-red-700 text-center font-bold"></div>
+
+                    <!-- Button -->
+                    <button id="verifyBtn" class="nature-btn w-full py-4 text-lg font-bold flex items-center justify-center gap-3">
+                        <span class="tree-icon text-2xl">🌿</span>
+                        <span>تحقق من الصفقة</span>
+                    </button>
                 </div>
-
-                <!-- Verify Button -->
-                <button id="verifyBtn" class="neon-btn w-full py-4 rounded-lg text-lg font-bold flex items-center justify-center gap-3">
-                    <span class="text-2xl">▶</span>
-                    <span>Initialize Verification</span>
-                </button>
-
-                <!-- Error Message -->
-                <div id="error" class="hidden mt-4 p-4 border border-red-500/50 bg-red-500/10 rounded-lg text-red-400 text-center font-bold"></div>
             </div>
 
-            <!-- Result Section -->
-            <div id="result" class="hidden">
-                <!-- Will be populated by JavaScript -->
-            </div>
+            <!-- Result -->
+            <div id="result" class="hidden mt-8"></div>
 
-            <!-- History Section -->
-            <div class="holo-card rounded-2xl p-6 mt-8">
-                <h2 class="text-cyan-400 text-xl font-bold mb-4 flex items-center gap-2">
-                    <span>◈</span>
-                    <span>Verification Log</span>
+            <!-- History -->
+            <div class="organic-card p-6 mt-8">
+                <h2 class="text-green-800 font-bold text-xl mb-4 flex items-center gap-2">
+                    <span>📚</span>
+                    <span>سجل التحققات</span>
                 </h2>
                 <div id="historyList" class="space-y-3">
-                    <div class="text-center text-cyan-600 py-8">No previous verifications</div>
+                    <div class="text-center text-green-600/50 py-4">لا توجد تحققات سابقة</div>
                 </div>
             </div>
-
         </main>
 
         <!-- Footer -->
-        <footer class="mt-12 text-center text-cyan-600/50 text-sm">
-            <p>Powered by GenLayer Neural Network</p>
-            <p class="mt-1 terminal">v2.0.4 // build_2024</p>
+        <footer class="mt-12 text-center">
+            <div class="flex items-center justify-center gap-2 mb-2">
+                <span class="text-2xl">🌲</span>
+                <span class="text-green-800 font-bold">DealGuard</span>
+            </div>
+            <p class="text-green-600/60 text-sm">
+                نحو صفقات أكثر أماناً مع GenLayer
+            </p>
         </footer>
     </div>
 
-    <!-- JavaScript -->
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
