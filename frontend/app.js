@@ -5,7 +5,6 @@ import { TransactionHashVariant } from "genlayer-js/types";
 const CONTRACT_ADDRESS = "0x2df8830eD829E347720076A2073bfb6CC1D5D791";
 const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 
-// ======== رسائل التوضيح للمستخدم ========
 const STAGE_MESSAGES = {
   CONNECTING: "جاري الاتصال بالمحفظة...",
   SWITCHING_CHAIN: "جاري التبديل إلى شبكة GenLayer...",
@@ -57,7 +56,7 @@ const TIPS_BY_VERDICT = {
   ]
 };
 
-// ======== الدوال المساعدة ========
+// ======== المساعدات ========
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -67,88 +66,41 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function showError(message, type = "error") {
+function showError(message) {
   const errorBox = document.getElementById("error");
-  if (!errorBox) {
+  if (errorBox) {
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+    errorBox.className = "p-4 mb-4 rounded-xl bg-red-100 text-red-700 text-center font-bold";
+  } else {
     alert(message);
-    return;
   }
-
-  errorBox.innerHTML = `
-    <div style="
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      background: ${type === "warning" ? "#FFF3E0" : "#FFEBEE"};
-      border: 1px solid ${type === "warning" ? "#FF9800" : "#F44336"};
-      color: ${type === "warning" ? "#E65100" : "#C62828"};
-    ">
-      <strong>${type === "warning" ? "تنبيه" : "خطأ"}</strong><br>
-      ${escapeHtml(message)}
-    </div>
-  `;
-  errorBox.style.display = "block";
 }
 
 function hideError() {
   const errorBox = document.getElementById("error");
-  if (errorBox) errorBox.style.display = "none";
-}
-
-function setButtonState({ text, disabled = false }) {
-  const button = document.getElementById("verifyBtn");
-  if (!button) return;
-  button.innerText = text;
-  button.disabled = disabled;
-}
-
-function updateStatus(message, progress = null) {
-  const statusBox = document.getElementById("status");
-  if (!statusBox) return;
-
-  let html = `
-    <div style="
-      padding: 12px;
-      background: #E3F2FD;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      color: #1565C0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    ">
-  `;
-
-  if (progress !== null) {
-    html += `
-      <div style="width: 100%;">
-        <div style="margin-bottom: 8px;">${escapeHtml(message)}</div>
-        <div style="
-          width: 100%;
-          height: 4px;
-          background: #BBDEFB;
-          border-radius: 2px;
-          overflow: hidden;
-        ">
-          <div style="
-            width: ${Math.min(100, Math.max(0, progress))}%;
-            height: 100%;
-            background: #2196F3;
-            transition: width 0.3s;
-          "></div>
-        </div>
-      </div>
-    `;
-  } else {
-    html += `<span>⏳</span> <span>${escapeHtml(message)}</span>`;
+  if (errorBox) {
+    errorBox.style.display = "none";
   }
+}
 
-  html += "</div>";
-  statusBox.innerHTML = html;
-  statusBox.style.display = "block";
-
-  // تحديث نص الزر أيضاً أثناء العملية
-  setButtonState({ text: message, disabled: true });
+function updateStatus(message, percent) {
+  const statusBox = document.getElementById("status");
+  const progressText = document.getElementById("progressText");
+  const progressPercent = document.getElementById("progressPercent");
+  const progressBar = document.getElementById("progressBar");
+  
+  if (statusBox) statusBox.style.display = "block";
+  if (progressText) progressText.textContent = message;
+  if (progressPercent) progressPercent.textContent = percent + "%";
+  if (progressBar) progressBar.style.width = percent + "%";
+  
+  // تحديث الزر
+  const btn = document.getElementById("verifyBtn");
+  if (btn) {
+    btn.textContent = message;
+    btn.disabled = true;
+  }
 }
 
 function hideStatus() {
@@ -157,7 +109,7 @@ function hideStatus() {
 }
 
 function createCaseId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
   return "case-" + Date.now() + "-" + Math.random().toString(36).slice(2);
@@ -175,22 +127,11 @@ function parseVerification(rawResult) {
   return rawResult;
 }
 
-function isValidHttpsUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-// ======== قراءة النتيجة مع إعادة المحاولة ========
+// ======== قراءة النتيجة ========
 async function readVerificationWithRetry(client, caseId, attempts = 12, delayMs = 5000) {
-  let lastResult = null;
-
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    console.log(`محاولة قراءة ${attempt}/${attempts}`, caseId);
-
+    console.log(`محاولة قراءة ${attempt}/${attempts}`);
+    
     try {
       const rawResult = await client.readContract({
         address: CONTRACT_ADDRESS,
@@ -200,41 +141,151 @@ async function readVerificationWithRetry(client, caseId, attempts = 12, delayMs 
       });
 
       const result = parseVerification(rawResult);
-      lastResult = result;
-
+      
       if (result?.case_id && result.case_id !== caseId) {
-        throw new Error("النتيجة لا تتطابق مع الطلب الحالي.");
+        throw new Error("النتيجة لا تتطابق مع الطلب.");
       }
 
       const verdict = String(result?.verdict ?? "").trim().toUpperCase();
 
       if (result?.case_id === caseId && ["SAFE", "RISKY", "HIGH_RISK"].includes(verdict)) {
+        console.log("✓ نتيجة صالحة:", result);
         return { ...result, verdict };
       }
 
-      // حالة انتظار التحليل
-      if (verdict === "UNKNOWN" || !verdict) {
-        updateStatus(`جاري انتظار التحليل... (${attempt}/${attempts})`, (attempt / attempts) * 100);
+      console.log("⌛ النتيجة غير جاهلة، المحاولة:", attempt);
+      
+      if (attempt < attempts) {
+        updateStatus(`جاري انتظار التحليل... (${attempt}/${attempts})`, 50 + (attempt / attempts) * 30);
+        await new Promise(r => setTimeout(r, delayMs));
       }
     } catch (error) {
       console.warn(`محاولة ${attempt} فشلت:`, error);
-    }
-
-    if (attempt < attempts) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      if (attempt < attempts) {
+        await new Promise(r => setTimeout(r, delayMs));
+      }
     }
   }
 
-  return lastResult;
+  return null;
+}
+
+// ======== عرض النتيجة ========
+function displayResult(result, verdict, caseId, txHash) {
+  console.log("عرض النتيجة:", { result, verdict, caseId, txHash });
+  
+  const verdictInfo = VERDICT_INFO[verdict];
+  const tips = TIPS_BY_VERDICT[verdict] || [];
+  
+  const resultBox = document.getElementById("result");
+  if (!resultBox) {
+    console.error("عنصر result غير موجود!");
+    return;
+  }
+
+  // بناء HTML للنتيجة
+  let html = `
+    <div style="
+      border: 3px solid ${verdictInfo.color};
+      border-radius: 20px;
+      padding: 30px;
+      background: linear-gradient(135deg, ${verdictInfo.color}10, ${verdictInfo.color}05);
+      margin-top: 20px;
+      box-shadow: 0 10px 40px ${verdictInfo.color}30;
+    ">
+      <!-- الرأس -->
+      <div style="text-align: center; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px solid ${verdictInfo.color}30;">
+        <div style="font-size: 64px; margin-bottom: 15px;">${verdictInfo.icon}</div>
+        <h2 style="font-size: 32px; font-weight: bold; color: ${verdictInfo.color}; margin-bottom: 10px;">
+          ${verdictInfo.title}
+        </h2>
+        <p style="font-size: 18px; color: #555; line-height: 1.6;">
+          ${escapeHtml(result.summary) || verdictInfo.description}
+        </p>
+      </div>
+
+      <!-- الإحصائيات -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+        <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
+          <div style="font-size: 14px; color: #666; margin-bottom: 5px;">درجة الخطر</div>
+          <div style="font-size: 36px; font-weight: bold; color: ${verdictInfo.color};">
+            ${result.risk_score ?? 0}/100
+          </div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
+          <div style="font-size: 14px; color: #666; margin-bottom: 5px;">مستوى الثقة</div>
+          <div style="font-size: 36px; font-weight: bold; color: #4CAF50;">
+            ${result.confidence ?? 0}%
+          </div>
+        </div>
+      </div>
+  `;
+
+  // أسباب الخطر
+  if (result.reasons?.length) {
+    html += `
+      <div style="background: #FFEBEE; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #F44336;">
+        <h3 style="color: #C62828; font-weight: bold; margin-bottom: 10px;">⚠️ أسباب الخطر</h3>
+        <ul style="margin: 0; padding-right: 20px; color: #555;">
+          ${result.reasons.map(r => `<li style="margin: 8px 0;">${escapeHtml(r)}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  // الأدلة
+  if (result.evidence?.length) {
+    html += `
+      <div style="background: #E8F5E9; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #4CAF50;">
+        <h3 style="color: #2E7D32; font-weight: bold; margin-bottom: 10px;">✓ الأدلة</h3>
+        <ul style="margin: 0; padding-right: 20px; color: #555;">
+          ${result.evidence.map(e => `<li style="margin: 8px 0;">${escapeHtml(e)}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  // النصائح
+  html += `
+    <div style="background: #E3F2FD; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #2196F3;">
+      <h3 style="color: #1565C0; font-weight: bold; margin-bottom: 10px;">💡 نصائح DealGuard</h3>
+      <ul style="margin: 0; padding-right: 20px; color: #555;">
+        ${tips.map(tip => `<li style="margin: 8px 0;">${escapeHtml(tip)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+
+  // معلومات التحقق
+  html += `
+    <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; font-size: 12px; color: #666; font-family: monospace;">
+      <div style="margin-bottom: 8px;"><strong>معرف القضية:</strong> ${escapeHtml(caseId)}</div>
+      <div><strong>رقم المعاملة:</strong> ${escapeHtml(txHash)}</div>
+    </div>
+    </div>
+  `;
+
+  // ✅ عرض النتيجة - هذا كان ناقص!
+  resultBox.innerHTML = html;
+  resultBox.style.display = "block";
+  
+  // تمرير لأسفل لرؤية النتيجة
+  resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
+  
+  console.log("✓ تم عرض النتيجة بنجاح");
 }
 
 // ======== الدالة الرئيسية ========
 window.verifyDeal = async function () {
+  console.log("=== بدأ التحقق ===");
+  
   hideError();
-  hideStatus();
-
+  
+  // إخفاء النتيجة السابقة
   const resultBox = document.getElementById("result");
-  if (resultBox) resultBox.style.display = "none";
+  if (resultBox) {
+    resultBox.style.display = "none";
+    resultBox.innerHTML = "";
+  }
 
   // جمع المدخلات
   const title = document.getElementById("title")?.value.trim();
@@ -242,46 +293,37 @@ window.verifyDeal = async function () {
   const dealUrl = document.getElementById("dealUrl")?.value.trim();
   const secondUrl = document.getElementById("secondUrl")?.value.trim();
 
-  // التحقق من المدخلات
+  console.log("المدخلات:", { title, description, dealUrl, secondUrl });
+
+  // التحقق
   if (!title || !description || !dealUrl || !secondUrl) {
-    showError("يرجى ملء جميع الحقول المطلوبة.", "warning");
+    showError("يرجى ملء جميع الحقول المطلوبة.");
     return;
   }
 
-  if (!isValidHttpsUrl(dealUrl) || !isValidHttpsUrl(secondUrl)) {
-    showError("يجب أن تكون جميع الروابط صحيحة وتبدأ بـ https://", "warning");
+  if (!dealUrl.startsWith("https://") || !secondUrl.startsWith("https://")) {
+    showError("يجب أن تبدأ جميع الروابط بـ https://");
     return;
   }
 
-  if (dealUrl === secondUrl) {
-    showError("الرابطان يجب أن يكونا مختلفين للمقارنة.", "warning");
-    return;
-  }
-
-  // اكتشاف المحفظة
   const provider = window.okxwallet || window.ethereum;
   if (!provider) {
-    showError("يرجى فتح DealGuard داخل محفظة OKX أو أي محفظة متوافقة مع Ethereum.");
+    showError("يرجى فتح DealGuard داخل محفظة OKX أو MetaMask.");
     return;
   }
 
   try {
-    // 1. الاتصال بالمحفظة
+    // 1. الاتصال
     updateStatus(STAGE_MESSAGES.CONNECTING, 10);
-
     const accounts = await provider.request({ method: "eth_requestAccounts" });
-    if (!accounts || accounts.length === 0) {
-      throw new Error("لم يتم العثور على حساب في المحفظة. تأكد من فتح المحفظة والموافقة على الاتصال.");
-    }
+    if (!accounts?.length) throw new Error("لم يتم العثور على حساب");
     const account = accounts[0];
-    console.log("المحفظة:", account);
+    console.log("الحساب:", account);
 
-    // 2. التحقق من الشبكة والتبديل إن لزم
+    // 2. التحقق من الشبكة
     let chainId = await provider.request({ method: "eth_chainId" });
-
     if (chainId.toLowerCase() !== EXPECTED_CHAIN_ID_HEX) {
       updateStatus(STAGE_MESSAGES.SWITCHING_CHAIN, 20);
-
       try {
         await provider.request({
           method: "wallet_switchEthereumChain",
@@ -289,7 +331,6 @@ window.verifyDeal = async function () {
         });
       } catch (err) {
         if (err?.code === 4902) {
-          // الشبكة غير موجودة → إضافتها
           await provider.request({
             method: "wallet_addEthereumChain",
             params: [{
@@ -299,33 +340,18 @@ window.verifyDeal = async function () {
               rpcUrls: ["https://studio.genlayer.com/api/rpc"]
             }]
           });
-        } else if (err?.code === 4001) {
-          throw new Error("تم رفض طلب تبديل الشبكة من المحفظة.");
-        } else {
-          throw new Error("فشل التبديل إلى شبكة GenLayer StudioNet. حاول يدوياً من إعدادات المحفظة.");
         }
-      }
-
-      // إعادة التحقق بعد التبديل
-      chainId = await provider.request({ method: "eth_chainId" });
-      if (chainId.toLowerCase() !== EXPECTED_CHAIN_ID_HEX) {
-        throw new Error("المحفظة غير متصلة بشبكة GenLayer StudioNet بعد المحاولة.");
       }
     }
 
     // 3. إنشاء العميل
     updateStatus(STAGE_MESSAGES.PREPARING, 30);
-    const client = createClient({
-      chain: studionet,
-      account,
-      provider
-    });
-
-    // 4. إنشاء معرف فريد
+    const client = createClient({ chain: studionet, account, provider });
+    
     const caseId = createCaseId();
     console.log("معرف القضية:", caseId);
 
-    // 5. إرسال الطلب
+    // 4. إرسال المعاملة
     updateStatus(STAGE_MESSAGES.ANALYZING, 40);
     const txHash = await client.writeContract({
       address: CONTRACT_ADDRESS,
@@ -333,9 +359,9 @@ window.verifyDeal = async function () {
       args: [caseId, title, description, dealUrl, secondUrl],
       value: BigInt(0)
     });
-    console.log("معاملة GenLayer:", txHash);
+    console.log("رقم المعاملة:", txHash);
 
-    // 6. انتظار القرار
+    // 5. انتظار القرار
     updateStatus(STAGE_MESSAGES.WAITING_DECISION, 60);
     const transaction = await client.waitForTransactionReceipt({
       hash: txHash,
@@ -343,122 +369,43 @@ window.verifyDeal = async function () {
       interval: 5000,
       retries: 120
     });
-    console.log("قرار GenLayer:", transaction);
+    console.log("حالة المعاملة:", transaction);
 
-    const executionResult = transaction?.txExecutionResult;
-    if (executionResult && executionResult !== "FINISHED_WITH_RETURN") {
-      throw new Error(`فشلت المعاملة: ${transaction?.txExecutionResultName || executionResult}`);
-    }
-
-    // 7. قراءة النتيجة
+    // 6. قراءة النتيجة
     updateStatus(STAGE_MESSAGES.READING_RESULT, 80);
     const result = await readVerificationWithRetry(client, caseId, 12, 5000);
-    console.log("النتيجة النهائية:", result);
-
+    
     if (!result) {
-      throw new Error("لم يتم إرجاع نتيجة التحقق بعد. حاول مرة أخرى بعد قليل.");
+      throw new Error("لم يتم الحصول على نتيجة من العقد الذكي.");
     }
 
-    if (result.case_id !== caseId) {
-      throw new Error("النتيجة لا تتطابق مع الطلب الحالي.");
-    }
+    console.log("النتيجة:", result);
 
-    const verdict = String(result.verdict ?? "").trim().toUpperCase();
+    // 7. عرض النتيجة
+    const verdict = result.verdict;
     if (!["SAFE", "RISKY", "HIGH_RISK"].includes(verdict)) {
-      throw new Error("النتيجة غير جاهزة بعد (حالة: " + (verdict || "UNKNOWN") + "). حاول مرة أخرى لاحقاً.");
+      throw new Error("النتيجة غير صالحة: " + verdict);
     }
 
-    // ======== عرض النتيجة ========
     hideStatus();
     displayResult(result, verdict, caseId, txHash);
 
-    // إعادة الزر لحالته الطبيعية مع نص واضح
-    setButtonState({ text: "تحقق من صفقة جديدة", disabled: false });
-
-  } catch (error) {
-    console.error("خطأ DealGuard:", error);
-    hideStatus();
-
-    let friendlyMessage = error?.shortMessage || error?.message || String(error);
-
-    // رسائل أوضح لأخطاء شائعة
-    if (friendlyMessage.includes("User rejected") || friendlyMessage.includes("4001")) {
-      friendlyMessage = "تم إلغاء العملية من المحفظة.";
-    } else if (friendlyMessage.includes("network") || friendlyMessage.includes("chain")) {
-      friendlyMessage = "مشكلة في الاتصال بالشبكة. تأكد أنك على GenLayer StudioNet.";
+    // إعادة الزر
+    const btn = document.getElementById("verifyBtn");
+    if (btn) {
+      btn.textContent = "تحقق من صفقة جديدة";
+      btn.disabled = false;
     }
 
-    showError(friendlyMessage);
-    setButtonState({ text: "التحقق من الصفقة", disabled: false });
+  } catch (error) {
+    console.error("خطأ:", error);
+    hideStatus();
+    showError(error?.message || "حدث خطأ غير متوقع");
+    
+    const btn = document.getElementById("verifyBtn");
+    if (btn) {
+      btn.textContent = "التحقق من الصفقة";
+      btn.disabled = false;
+    }
   }
 };
-
-// ======== دالة عرض النتيجة المحسّنة ========
-function displayResult(result, verdict, caseId, txHash) {
-  const verdictInfo = VERDICT_INFO[verdict];
-  const tips = TIPS_BY_VERDICT[verdict] || [];
-
-  const resultBox = document.getElementById("result");
-  if (!resultBox) return;
-
-  resultBox.innerHTML = `
-    <div style="
-      border: 2px solid ${verdictInfo.color};
-      border-radius: 12px;
-      padding: 20px;
-      background: linear-gradient(135deg, ${verdictInfo.color}15, ${verdictInfo.color}08);
-      margin-top: 20px;
-    ">
-      <!-- الحكم الرئيسي -->
-      <div style="
-        text-align: center;
-        padding: 20px;
-        border-bottom: 2px solid ${verdictInfo.color}30;
-        margin-bottom: 20px;
-      ">
-        <div style="font-size: 48px; margin-bottom: 10px;">${verdictInfo.icon}</div>
-        <div style="
-          font-size: 28px;
-          font-weight: bold;
-          color: ${verdictInfo.color};
-          margin-bottom: 10px;
-        ">${verdictInfo.title}</div>
-        <div style="font-size: 16px; color: #666; margin-bottom: 15px;">
-          ${verdictInfo.description}
-        </div>
-      </div>
-
-      <!-- التفاصيل -->
-      <div style="display: grid; gap: 15px;">
-        <!-- درجة الخطر -->
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 15px;
-          background: white;
-          border-radius: 8px;
-        ">
-          <span>درجة الخطر:</span>
-          <span style="
-            font-size: 24px;
-            font-weight: bold;
-            color: ${verdictInfo.color};
-          ">${result.risk_score ?? 0}/100</span>
-        </div>
-
-        <!-- مستوى الثقة -->
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 15px;
-          background: white;
-          border-radius: 8px;
-        ">
-          <span>مستوى الثقة:</span>
-          <span style="
-            font-weight: bold;
-            color: ${(result.confidence ?? 0) >= 80 ? '#4CAF50' : (result.confidence ?? 0) >= 50 ? '#FF9800' : '#F44336'};
-          ">${result.confidence ?? 0}%</span>
-        </div>
