@@ -1,216 +1,410 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DealGuard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    
-    body {
-      font-family: 'Inter', 'Cairo', sans-serif;
-      background: 
-        radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
-        #0a0a0f;
-      min-height: 100vh;
-    }
-    
-    [lang="ar"] body {
-      font-family: 'Cairo', 'Inter', sans-serif;
-    }
-    
-    .glass {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    
-    .glass-strong {
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-    
-    .animate-fade-in-up {
-      animation: fadeInUp 0.6s ease-out;
-    }
-    
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .gradient-text {
-      background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #10b981 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    .input-glow:focus {
-      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2), 0 0 20px rgba(167, 139, 250, 0.1);
-    }
-    
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealGuard // Neural Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-purple: #9d00ff;
+            --dark-bg: #050508;
+            --glass: rgba(0, 243, 255, 0.03);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--dark-bg);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Grid Background */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        /* Floating Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--neon-cyan);
+            top: -100px;
+            right: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--neon-pink);
+            bottom: -50px;
+            left: -50px;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        /* Holographic Card */
+        .holo-card {
+            background: linear-gradient(135deg, 
+                rgba(0, 243, 255, 0.05) 0%,
+                rgba(157, 0, 255, 0.05) 50%,
+                rgba(255, 0, 255, 0.05) 100%);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .holo-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(0, 243, 255, 0.1) 50%,
+                transparent 70%
+            );
+            transform: rotate(45deg);
+            animation: holoShine 6s infinite;
+        }
+
+        @keyframes holoShine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        /* Glitch Text Effect */
+        .glitch {
+            font-family: 'Orbitron', sans-serif;
+            position: relative;
+            color: #fff;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            color: var(--neon-cyan);
+            animation: glitch-1 2s infinite;
+            clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+        }
+
+        .glitch::after {
+            color: var(--neon-pink);
+            animation: glitch-2 2s infinite;
+            clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+        }
+
+        @keyframes glitch-1 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+        }
+
+        @keyframes glitch-2 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(2px, -2px); }
+            40% { transform: translate(2px, 2px); }
+        }
+
+        /* Neon Button */
+        .neon-btn {
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3),
+                        inset 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .neon-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 60px rgba(0, 243, 255, 0.6),
+                        0 0 100px rgba(0, 243, 255, 0.4);
+        }
+
+        .neon-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .neon-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Scanning Line */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: scan 3s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        /* Custom Input */
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: var(--neon-cyan);
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .cyber-input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3),
+                        inset 0 0 20px rgba(0, 243, 255, 0.05);
+        }
+
+        /* Result Cards */
+        .result-safe {
+            border-color: #00ff88;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .result-risky {
+            border-color: #ffaa00;
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
+        }
+
+        .result-danger {
+            border-color: #ff0044;
+            box-shadow: 0 0 30px rgba(255, 0, 68, 0.3);
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        /* Terminal Text */
+        .terminal {
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+
+        /* Hexagon Pattern */
+        .hex-bg {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300f3ff' fill-opacity='0.05'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #050508;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .glitch {
+                font-size: 2rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="text-white">
-  <!-- Language Toggle -->
-  <button id="langToggle" class="fixed top-6 left-6 z-50 px-5 py-2.5 rounded-full glass-strong text-sm font-semibold hover:bg-white/10 transition-all duration-300 flex items-center gap-2">
-    <span>🌐</span>
-    <span id="langText">العربية</span>
-  </button>
+<body class="hex-bg">
+    <!-- Background Effects -->
+    <div class="cyber-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
 
-  <!-- Header -->
-  <header class="max-w-6xl mx-auto px-6 pt-8">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xl font-black shadow-lg shadow-violet-500/30">
-          D
-        </div>
-        <div>
-          <div class="font-bold text-lg tracking-tight">DealGuard</div>
-          <div class="text-[10px] uppercase tracking-[0.2em] text-white/40">AI Verification</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 px-4 py-2 rounded-full glass text-xs">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-white/60">GenLayer</span>
-      </div>
-    </div>
-  </header>
+    <!-- Language Toggle -->
+    <button id="langToggle" class="fixed top-6 left-6 z-50 px-4 py-2 holo-card rounded-lg text-cyan-400 text-sm font-bold hover:text-cyan-300 transition">
+        <span class="mr-2">◈</span>
+        <span id="langText">AR</span>
+    </button>
 
-  <!-- Main Content -->
-  <main class="max-w-6xl mx-auto px-6 py-12">
-    <div class="grid lg:grid-cols-5 gap-8">
-      
-      <!-- Left: Hero & Form -->
-      <div class="lg:col-span-3 space-y-8">
-        <!-- Hero -->
-        <section class="animate-fade-in-up">
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs text-white/50 mb-6">
-            <span>🛡️</span>
-            <span data-i18n="hero.badge">Decentralized Deal Intelligence</span>
-          </div>
-          
-          <h1 class="text-5xl sm:text-6xl font-black tracking-tight leading-[0.95] mb-6">
-            <span data-i18n="hero.title1">Don't trust</span><br>
-            <span data-i18n="hero.title2">the deal.</span><br>
-            <span class="gradient-text" data-i18n="hero.subtitle">Verify it.</span>
-          </h1>
-          
-          <p class="text-lg text-white/50 max-w-lg leading-relaxed" data-i18n="hero.desc">
-            DealGuard compares real web sources and uses GenLayer to determine whether an online deal is trustworthy.
-          </p>
-        </section>
-
-        <!-- Form -->
-        <section class="glass-strong rounded-3xl p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.1s">
-          <div id="error" class="hidden mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm"></div>
-          
-          <form id="dealForm" class="space-y-5">
-            <div>
-              <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.titleLabel">Deal Title *</label>
-              <input type="text" id="title" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all" data-i18n-placeholder="form.titlePlaceholder" placeholder="e.g., iPhone 15 Pro - 256GB">
+    <!-- Main Container -->
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4">
+        
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <div class="inline-block mb-4 px-4 py-1 border border-cyan-500/30 rounded-full text-xs text-cyan-400 tracking-widest uppercase">
+                Neural Network Active
             </div>
             
-            <div>
-              <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.descLabel">Description *</label>
-              <textarea id="description" rows="3" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all resize-none" data-i18n-placeholder="form.descPlaceholder" placeholder="Describe the deal..."></textarea>
-            </div>
+            <h1 class="glitch text-6xl md:text-8xl font-black mb-4" data-text="DEALGUARD">
+                DEALGUARD
+            </h1>
             
-            <div class="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.dealUrlLabel">Deal URL *</label>
-                <input type="url" id="dealUrl" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all" placeholder="https://...">
-                <p class="mt-1.5 text-xs text-white/30" data-i18n="form.dealUrlHint">Must start with https://</p>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-white/70 mb-2" data-i18n="form.refUrlLabel">Reference URL *</label>
-                <input type="url" id="secondUrl" class="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-violet-500/50 focus:outline-none input-glow transition-all" placeholder="https://...">
-                <p class="mt-1.5 text-xs text-white/30" data-i18n="form.refUrlHint">Reviews or official store</p>
-              </div>
+            <p class="text-xl text-cyan-200/60 font-light tracking-wider">
+                AI-Powered Deal Verification System
+            </p>
+        </header>
+
+        <!-- Main Interface -->
+        <main class="w-full max-w-4xl">
+            
+            <!-- Input Section -->
+            <div class="holo-card rounded-2xl p-8 mb-8">
+                <div class="scan-line"></div>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
+                            // Deal Title
+                        </label>
+                        <input type="text" id="title" class="cyber-input w-full px-4 py-3 rounded-lg text-lg" placeholder="Enter deal title...">
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
+                            // Deal URL
+                        </label>
+                        <input type="url" id="dealUrl" class="cyber-input w-full px-4 py-3 rounded-lg text-lg" placeholder="https://...">
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-6">
+                    <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
+                        // Description
+                    </label>
+                    <textarea id="description" rows="3" class="cyber-input w-full px-4 py-3 rounded-lg text-lg resize-none" placeholder="Describe the deal..."></textarea>
+                </div>
+
+                <div class="space-y-2 mb-8">
+                    <label class="block text-cyan-400 text-sm uppercase tracking-wider font-bold">
+                        // Reference URL
+                    </label>
+                    <input type="url" id="secondUrl" class="cyber-input w-full px-4 py-3 rounded-lg text-lg" placeholder="https://...">
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progress" class="hidden mb-6">
+                    <div class="flex justify-between text-cyan-400 text-sm mb-2 font-bold">
+                        <span id="progressText">Initializing...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="h-2 bg-black/50 rounded-full overflow-hidden border border-cyan-500/30">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Verify Button -->
+                <button id="verifyBtn" class="neon-btn w-full py-4 rounded-lg text-lg font-bold flex items-center justify-center gap-3">
+                    <span class="text-2xl">▶</span>
+                    <span>Initialize Verification</span>
+                </button>
+
+                <!-- Error Message -->
+                <div id="error" class="hidden mt-4 p-4 border border-red-500/50 bg-red-500/10 rounded-lg text-red-400 text-center font-bold"></div>
             </div>
 
-            <!-- Progress -->
-            <div id="progress" class="hidden">
-              <div class="flex justify-between text-sm mb-2">
-                <span id="progressText" class="text-white/60">Connecting...</span>
-                <span id="progressPercent" class="text-violet-400 font-bold">0%</span>
-              </div>
-              <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div id="progressBar" class="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
+            <!-- Result Section -->
+            <div id="result" class="hidden">
+                <!-- Will be populated by JavaScript -->
             </div>
 
-            <button type="submit" id="verifyBtn" class="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold text-lg hover:from-violet-500 hover:to-fuchsia-500 transform hover:-translate-y-0.5 transition-all duration-300 shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2">
-              <span>🔍</span>
-              <span data-i18n="form.verifyBtn">Verify Deal</span>
-            </button>
-          </form>
-        </section>
-
-        <!-- Result -->
-        <div id="result"></div>
-      </div>
-
-      <!-- Right: Sidebar -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Features -->
-        <div class="glass rounded-2xl p-6 animate-fade-in-up" style="animation-delay: 0.2s">
-          <h3 class="font-bold mb-4 text-white/80" data-i18n="features.title">Features</h3>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-              <span class="text-xl">🌐</span>
-              <div>
-                <div class="font-medium text-sm" data-i18n="features.webEvidence">Web Evidence</div>
-                <div class="text-xs text-white/40">Real source content</div>
-              </div>
+            <!-- History Section -->
+            <div class="holo-card rounded-2xl p-6 mt-8">
+                <h2 class="text-cyan-400 text-xl font-bold mb-4 flex items-center gap-2">
+                    <span>◈</span>
+                    <span>Verification Log</span>
+                </h2>
+                <div id="historyList" class="space-y-3">
+                    <div class="text-center text-cyan-600 py-8">No previous verifications</div>
+                </div>
             </div>
-            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-              <span class="text-xl">⚖️</span>
-              <div>
-                <div class="font-medium text-sm" data-i18n="features.comparison">Source Comparison</div>
-                <div class="text-xs text-white/40">Independent verification</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-              <span class="text-xl">🔐</span>
-              <div>
-                <div class="font-medium text-sm" data-i18n="features.uniqueCases">Unique Cases</div>
-                <div class="text-xs text-white/40">Request-specific IDs</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- History -->
-        <div class="glass rounded-2xl p-6 animate-fade-in-up" style="animation-delay: 0.3s">
-          <h3 class="font-bold mb-4 text-white/80" data-i18n="history.title">History</h3>
-          <div id="historyList">
-            <div class="text-center text-white/40 py-8 text-sm" data-i18n="history.empty">No previous verifications</div>
-          </div>
-        </div>
-      </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-cyan-600/50 text-sm">
+            <p>Powered by GenLayer Neural Network</p>
+            <p class="mt-1 terminal">v2.0.4 // build_2024</p>
+        </footer>
     </div>
-  </main>
 
-  <!-- Footer -->
-  <footer class="max-w-6xl mx-auto px-6 py-8 mt-12 border-t border-white/10">
-    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-white/30">
-      <span>DealGuard • Powered by GenLayer</span>
-      <span>Evidence-based verification</span>
-    </div>
-  </footer>
-
-  <script type="module" src="/src/main.js"></script>
+    <!-- JavaScript -->
+    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
