@@ -2,7 +2,7 @@ import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionHashVariant } from "genlayer-js/types";
 
-const CONTRACT_ADDRESS = "0x2df8830eD829E347720076A2073bfb6CC1D5D791";
+const CONTRACT_ADDRESS = "0x3a1938a95EE4a008a868Ca3327b5d4B9956408cF";
 const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 
 const STAGE_MESSAGES = {
