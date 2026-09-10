@@ -9,8 +9,8 @@ const STAGE_MESSAGES = {
   CONNECTING: "جاري الاتصال بالمحفظة...",
   SWITCHING_CHAIN: "جاري التبديل إلى شبكة GenLayer...",
   PREPARING: "جاري تجهيز الطلب...",
-  ANALYZING: "جاري تحليل الصفقة بالذكاء الاصطناعي...",
-  WAITING_DECISION: "جاري انتظار قرار الشبكة...",
+  ANALYZING: "جاري إرسال الصفقة للتحليل بالذكاء الاصطناعي...",
+  WAITING_DECISION: "الشبكة بتحلل الصفقة... قد يستغرق دقيقتين إلى 5 دقائق",
   READING_RESULT: "جاري قراءة نتيجة التحقق...",
   COMPLETE: "اكتمل التحقق ✓"
 };
@@ -95,7 +95,6 @@ function updateStatus(message, percent) {
   if (progressPercent) progressPercent.textContent = percent + "%";
   if (progressBar) progressBar.style.width = percent + "%";
   
-  // تحديث الزر
   const btn = document.getElementById("verifyBtn");
   if (btn) {
     btn.textContent = message;
@@ -127,8 +126,8 @@ function parseVerification(rawResult) {
   return rawResult;
 }
 
-// ======== قراءة النتيجة ========
-async function readVerificationWithRetry(client, caseId, attempts = 12, delayMs = 5000) {
+// ======== قراءة النتيجة (محسّنة) ========
+async function readVerificationWithRetry(client, caseId, attempts = 20, delayMs = 2000) {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     console.log(`محاولة قراءة ${attempt}/${attempts}`);
     
@@ -153,10 +152,11 @@ async function readVerificationWithRetry(client, caseId, attempts = 12, delayMs 
         return { ...result, verdict };
       }
 
-      console.log("⌛ النتيجة غير جاهلة، المحاولة:", attempt);
+      console.log("⌛ النتيجة غير جاهزة، المحاولة:", attempt);
       
       if (attempt < attempts) {
-        updateStatus(`جاري انتظار التحليل... (${attempt}/${attempts})`, 50 + (attempt / attempts) * 30);
+        const progress = 55 + Math.min(30, (attempt / attempts) * 30);
+        updateStatus(`جاري انتظار التحليل... (${attempt}/${attempts})`, Math.floor(progress));
         await new Promise(r => setTimeout(r, delayMs));
       }
     } catch (error) {
@@ -183,7 +183,6 @@ function displayResult(result, verdict, caseId, txHash) {
     return;
   }
 
-  // بناء HTML للنتيجة
   let html = `
     <div style="
       border: 3px solid ${verdictInfo.color};
@@ -193,7 +192,6 @@ function displayResult(result, verdict, caseId, txHash) {
       margin-top: 20px;
       box-shadow: 0 10px 40px ${verdictInfo.color}30;
     ">
-      <!-- الرأس -->
       <div style="text-align: center; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px solid ${verdictInfo.color}30;">
         <div style="font-size: 64px; margin-bottom: 15px;">${verdictInfo.icon}</div>
         <h2 style="font-size: 32px; font-weight: bold; color: ${verdictInfo.color}; margin-bottom: 10px;">
@@ -204,7 +202,6 @@ function displayResult(result, verdict, caseId, txHash) {
         </p>
       </div>
 
-      <!-- الإحصائيات -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
         <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
           <div style="font-size: 14px; color: #666; margin-bottom: 5px;">درجة الخطر</div>
@@ -221,7 +218,6 @@ function displayResult(result, verdict, caseId, txHash) {
       </div>
   `;
 
-  // أسباب الخطر
   if (result.reasons?.length) {
     html += `
       <div style="background: #FFEBEE; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #F44336;">
@@ -233,7 +229,6 @@ function displayResult(result, verdict, caseId, txHash) {
     `;
   }
 
-  // الأدلة
   if (result.evidence?.length) {
     html += `
       <div style="background: #E8F5E9; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #4CAF50;">
@@ -245,7 +240,6 @@ function displayResult(result, verdict, caseId, txHash) {
     `;
   }
 
-  // النصائح
   html += `
     <div style="background: #E3F2FD; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #2196F3;">
       <h3 style="color: #1565C0; font-weight: bold; margin-bottom: 10px;">💡 نصائح DealGuard</h3>
@@ -255,7 +249,6 @@ function displayResult(result, verdict, caseId, txHash) {
     </div>
   `;
 
-  // معلومات التحقق
   html += `
     <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; font-size: 12px; color: #666; font-family: monospace;">
       <div style="margin-bottom: 8px;"><strong>معرف القضية:</strong> ${escapeHtml(caseId)}</div>
@@ -264,30 +257,25 @@ function displayResult(result, verdict, caseId, txHash) {
     </div>
   `;
 
-  // ✅ عرض النتيجة - هذا كان ناقص!
   resultBox.innerHTML = html;
   resultBox.style.display = "block";
-  
-  // تمرير لأسفل لرؤية النتيجة
   resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
   
   console.log("✓ تم عرض النتيجة بنجاح");
 }
 
-// ======== الدالة الرئيسية ========
+// ======== الدالة الرئيسية (محسّنة) ========
 window.verifyDeal = async function () {
   console.log("=== بدأ التحقق ===");
   
   hideError();
   
-  // إخفاء النتيجة السابقة
   const resultBox = document.getElementById("result");
   if (resultBox) {
     resultBox.style.display = "none";
     resultBox.innerHTML = "";
   }
 
-  // جمع المدخلات
   const title = document.getElementById("title")?.value.trim();
   const description = document.getElementById("description")?.value.trim();
   const dealUrl = document.getElementById("dealUrl")?.value.trim();
@@ -295,7 +283,6 @@ window.verifyDeal = async function () {
 
   console.log("المدخلات:", { title, description, dealUrl, secondUrl });
 
-  // التحقق
   if (!title || !description || !dealUrl || !secondUrl) {
     showError("يرجى ملء جميع الحقول المطلوبة.");
     return;
@@ -312,9 +299,11 @@ window.verifyDeal = async function () {
     return;
   }
 
+  let progressTimer = null;
+
   try {
     // 1. الاتصال
-    updateStatus(STAGE_MESSAGES.CONNECTING, 10);
+    updateStatus(STAGE_MESSAGES.CONNECTING, 8);
     const accounts = await provider.request({ method: "eth_requestAccounts" });
     if (!accounts?.length) throw new Error("لم يتم العثور على حساب");
     const account = accounts[0];
@@ -323,7 +312,7 @@ window.verifyDeal = async function () {
     // 2. التحقق من الشبكة
     let chainId = await provider.request({ method: "eth_chainId" });
     if (chainId.toLowerCase() !== EXPECTED_CHAIN_ID_HEX) {
-      updateStatus(STAGE_MESSAGES.SWITCHING_CHAIN, 20);
+      updateStatus(STAGE_MESSAGES.SWITCHING_CHAIN, 15);
       try {
         await provider.request({
           method: "wallet_switchEthereumChain",
@@ -345,14 +334,14 @@ window.verifyDeal = async function () {
     }
 
     // 3. إنشاء العميل
-    updateStatus(STAGE_MESSAGES.PREPARING, 30);
+    updateStatus(STAGE_MESSAGES.PREPARING, 22);
     const client = createClient({ chain: studionet, account, provider });
     
     const caseId = createCaseId();
     console.log("معرف القضية:", caseId);
 
     // 4. إرسال المعاملة
-    updateStatus(STAGE_MESSAGES.ANALYZING, 40);
+    updateStatus(STAGE_MESSAGES.ANALYZING, 30);
     const txHash = await client.writeContract({
       address: CONTRACT_ADDRESS,
       functionName: "analyze_deal",
@@ -361,22 +350,33 @@ window.verifyDeal = async function () {
     });
     console.log("رقم المعاملة:", txHash);
 
-    // 5. انتظار القرار
-    updateStatus(STAGE_MESSAGES.WAITING_DECISION, 60);
+    // 5. انتظار القرار (محسّن)
+    updateStatus(STAGE_MESSAGES.WAITING_DECISION, 40);
+
+    // تحديث تدريجي للنسبة أثناء الانتظار
+    let currentProgress = 40;
+    progressTimer = setInterval(() => {
+      currentProgress = Math.min(70, currentProgress + 1);
+      updateStatus(STAGE_MESSAGES.WAITING_DECISION, currentProgress);
+    }, 2500);
+
     const transaction = await client.waitForTransactionReceipt({
       hash: txHash,
       waitUntil: "decided",
-      interval: 5000,
-      retries: 120
+      interval: 2500,   // أسرع
+      retries: 150      // ~6 دقائق كحد أقصى
     });
+    
+    clearInterval(progressTimer);
+    progressTimer = null;
     console.log("حالة المعاملة:", transaction);
 
-    // 6. قراءة النتيجة
-    updateStatus(STAGE_MESSAGES.READING_RESULT, 80);
-    const result = await readVerificationWithRetry(client, caseId, 12, 5000);
+    // 6. قراءة النتيجة (محسّنة)
+    updateStatus(STAGE_MESSAGES.READING_RESULT, 75);
+    const result = await readVerificationWithRetry(client, caseId, 20, 2000);
     
     if (!result) {
-      throw new Error("لم يتم الحصول على نتيجة من العقد الذكي.");
+      throw new Error("لم يتم الحصول على نتيجة من العقد الذكي. حاول مرة أخرى بعد قليل.");
     }
 
     console.log("النتيجة:", result);
@@ -390,7 +390,6 @@ window.verifyDeal = async function () {
     hideStatus();
     displayResult(result, verdict, caseId, txHash);
 
-    // إعادة الزر
     const btn = document.getElementById("verifyBtn");
     if (btn) {
       btn.textContent = "تحقق من صفقة جديدة";
@@ -399,6 +398,7 @@ window.verifyDeal = async function () {
 
   } catch (error) {
     console.error("خطأ:", error);
+    if (progressTimer) clearInterval(progressTimer);
     hideStatus();
     showError(error?.message || "حدث خطأ غير متوقع");
     
