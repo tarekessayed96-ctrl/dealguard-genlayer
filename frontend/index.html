@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page.title">DealGuard</title>
+    <title>DealGuard - حماية الصفقات</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Tajawal', 'Inter', sans-serif;
+            font-family: 'Tajawal', sans-serif;
             background: linear-gradient(135deg, #f5f7f4 0%, #e8ebe6 100%);
             min-height: 100vh;
             color: #2c3e2d;
         }
-        
-        [lang="en"] body { font-family: 'Inter', 'Tajawal', sans-serif; }
         
         .organic-blob {
             position: absolute;
@@ -78,10 +76,6 @@
             box-shadow: 0 12px 35px rgba(74, 124, 89, 0.4);
         }
         
-        .result-safe { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 2px solid #28a745; }
-        .result-risky { background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; }
-        .result-danger { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 2px solid #dc3545; }
-        
         .organic-progress {
             height: 12px;
             background: #e8ebe6;
@@ -106,11 +100,6 @@
     <div class="organic-blob blob-1"></div>
     <div class="organic-blob blob-2"></div>
 
-    <!-- Language Toggle -->
-    <button id="langToggle" class="fixed top-6 left-6 z-50 px-4 py-2 organic-card text-sm font-bold text-green-700 hover:text-green-800 transition">
-        <span id="langText">English</span>
-    </button>
-
     <!-- Main -->
     <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
         
@@ -118,12 +107,12 @@
         <header class="text-center mb-10">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm mb-4">
                 <span>🌳</span>
-                <span data-i18n="header.badge">مدعوم من GenLayer</span>
+                <span>مدعوم من GenLayer</span>
             </div>
             
             <h1 class="text-5xl md:text-6xl font-bold text-green-800 mb-3">DealGuard</h1>
             
-            <p class="text-xl text-green-600/70 max-w-lg mx-auto leading-relaxed" data-i18n="header.subtitle">
+            <p class="text-xl text-green-600/70 max-w-lg mx-auto leading-relaxed">
                 حماية طبيعية لصفقاتك عبر الذكاء الاصطناعي
             </p>
         </header>
@@ -135,40 +124,28 @@
                 <!-- Form -->
                 <div class="space-y-6">
                     <div>
-                        <label class="block text-green-800 font-bold mb-2" data-i18n="form.titleLabel">
-                            عنوان الصفقة
-                        </label>
-                        <input type="text" id="title" class="nature-input w-full px-5 py-4 text-lg" 
-                               data-i18n-placeholder="form.titlePlaceholder" placeholder="مثال: iPhone 15 Pro">
+                        <label class="block text-green-800 font-bold mb-2">عنوان الصفقة</label>
+                        <input type="text" id="title" class="nature-input w-full px-5 py-4 text-lg" placeholder="مثال: iPhone 15 Pro">
                     </div>
 
                     <div>
-                        <label class="block text-green-800 font-bold mb-2" data-i18n="form.descLabel">
-                            وصف الصفقة
-                        </label>
-                        <textarea id="description" rows="3" class="nature-input w-full px-5 py-4 text-lg resize-none"
-                                  data-i18n-placeholder="form.descPlaceholder" placeholder="صف تفاصيل الصفقة..."></textarea>
+                        <label class="block text-green-800 font-bold mb-2">وصف الصفقة</label>
+                        <textarea id="description" rows="3" class="nature-input w-full px-5 py-4 text-lg resize-none" placeholder="صف تفاصيل الصفقة..."></textarea>
                     </div>
 
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-green-800 font-bold mb-2" data-i18n="form.dealUrlLabel">
-                                رابط الموقع
-                            </label>
-                            <input type="url" id="dealUrl" class="nature-input w-full px-5 py-4 text-lg" 
-                                   data-i18n-placeholder="form.urlPlaceholder" placeholder="https://example.com">
+                            <label class="block text-green-800 font-bold mb-2">رابط الموقع</label>
+                            <input type="url" id="dealUrl" class="nature-input w-full px-5 py-4 text-lg" placeholder="https://example.com">
                         </div>
                         <div>
-                            <label class="block text-green-800 font-bold mb-2" data-i18n="form.refUrlLabel">
-                                رابط المرجع
-                            </label>
-                            <input type="url" id="secondUrl" class="nature-input w-full px-5 py-4 text-lg"
-                                   data-i18n-placeholder="form.refPlaceholder" placeholder="https://reviews.com">
+                            <label class="block text-green-800 font-bold mb-2">رابط المرجع</label>
+                            <input type="url" id="secondUrl" class="nature-input w-full px-5 py-4 text-lg" placeholder="https://reviews.com">
                         </div>
                     </div>
 
                     <!-- Progress -->
-                    <div id="progress" class="hidden">
+                    <div id="status" class="hidden">
                         <div class="flex justify-between text-green-700 text-sm mb-2 font-bold">
                             <span id="progressText">...</span>
                             <span id="progressPercent">0%</span>
@@ -184,34 +161,21 @@
                     <!-- Button -->
                     <button id="verifyBtn" class="nature-btn w-full py-4 text-lg font-bold flex items-center justify-center gap-3">
                         <span>🌿</span>
-                        <span data-i18n="form.verifyBtn">تحقق من الصفقة</span>
+                        <span>تحقق من الصفقة</span>
                     </button>
                 </div>
             </div>
 
             <!-- Result -->
             <div id="result" class="hidden mt-8"></div>
-
-            <!-- History -->
-            <div class="organic-card p-6 mt-8">
-                <h2 class="text-green-800 font-bold text-xl mb-4 flex items-center gap-2">
-                    <span>📚</span>
-                    <span data-i18n="history.title">سجل التحققات</span>
-                </h2>
-                <div id="historyList">
-                    <div class="text-center text-green-600/50 py-4" data-i18n="history.empty">لا توجد تحققات</div>
-                </div>
-            </div>
         </main>
 
         <!-- Footer -->
         <footer class="mt-12 text-center">
-            <p class="text-green-600/60 text-sm" data-i18n="footer.text">
-                نحو صفقات أكثر أماناً مع GenLayer
-            </p>
+            <p class="text-green-600/60 text-sm">نحو صفقات أكثر أماناً مع GenLayer</p>
         </footer>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/app.js"></script>
 </body>
 </html>
