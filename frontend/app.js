@@ -2,17 +2,18 @@ import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionHashVariant } from "genlayer-js/types";
 
-const CONTRACT_ADDRESS = "0x3a1938a95EE4a008a868Ca3327b5d4B9956408cF";
+// ✅ العنوان الصحيح (القديم)
+const CONTRACT_ADDRESS = "0x2df8830eD829E347720076A2073bfb6CC1D5D791";
 const EXPECTED_CHAIN_ID_HEX = "0xf22f";
 
 const STAGE_MESSAGES = {
   CONNECTING: "جاري الاتصال بالمحفظة...",
   SWITCHING_CHAIN: "جاري التبديل إلى شبكة GenLayer...",
   PREPARING: "جاري تجهيز الطلب...",
-  ANALYZING: "جاري إرسال الصفقة للتحليل بالذكاء الاصطناعي...",
-  WAITING_DECISION: "الشبكة بتحلل الصفقة... قد يستغرق دقيقتين إلى 5 دقائق",
-  READING_RESULT: "جاري قراءة نتيجة التحقق...",
-  COMPLETE: "اكتمل التحقق ✓"
+  ANALYZING: "جاري تحليل الصفقة...",
+  WAITING_DECISION: "الشبكة بتحلل الصفقة (قد يستغرق 1-3 دقائق)...",
+  READING_RESULT: "جاري قراءة النتيجة...",
+  COMPLETE: "✓ اكتمل التحقق"
 };
 
 const VERDICT_INFO = {
@@ -58,12 +59,13 @@ const TIPS_BY_VERDICT = {
 
 // ======== المساعدات ========
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  if (!value) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function showError(message) {
@@ -126,8 +128,8 @@ function parseVerification(rawResult) {
   return rawResult;
 }
 
-// ======== قراءة النتيجة (محسّنة) ========
-async function readVerificationWithRetry(client, caseId, attempts = 20, delayMs = 2000) {
+// ======== قراءة النتيجة ========
+async function readVerificationWithRetry(client, caseId, attempts = 15, delayMs = 3000) {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     console.log(`محاولة قراءة ${attempt}/${attempts}`);
     
@@ -155,8 +157,8 @@ async function readVerificationWithRetry(client, caseId, attempts = 20, delayMs 
       console.log("⌛ النتيجة غير جاهزة، المحاولة:", attempt);
       
       if (attempt < attempts) {
-        const progress = 55 + Math.min(30, (attempt / attempts) * 30);
-        updateStatus(`جاري انتظار التحليل... (${attempt}/${attempts})`, Math.floor(progress));
+        const progress = 55 + Math.floor((attempt / attempts) * 25);
+        updateStatus(`جاري انتظار التحليل... (${attempt}/${attempts})`, progress);
         await new Promise(r => setTimeout(r, delayMs));
       }
     } catch (error) {
@@ -166,7 +168,7 @@ async function readVerificationWithRetry(client, caseId, attempts = 20, delayMs 
       }
     }
   }
-
+  
   return null;
 }
 
@@ -188,7 +190,7 @@ function displayResult(result, verdict, caseId, txHash) {
       border: 3px solid ${verdictInfo.color};
       border-radius: 20px;
       padding: 30px;
-      background: linear-gradient(135deg, ${verdictInfo.color}10, ${verdictInfo.color}05);
+      background: linear-gradient(135deg, ${verdictInfo.color}15, ${verdictInfo.color}08);
       margin-top: 20px;
       box-shadow: 0 10px 40px ${verdictInfo.color}30;
     ">
@@ -241,19 +243,17 @@ function displayResult(result, verdict, caseId, txHash) {
   }
 
   html += `
-    <div style="background: #E3F2FD; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #2196F3;">
-      <h3 style="color: #1565C0; font-weight: bold; margin-bottom: 10px;">💡 نصائح DealGuard</h3>
-      <ul style="margin: 0; padding-right: 20px; color: #555;">
-        ${tips.map(tip => `<li style="margin: 8px 0;">${escapeHtml(tip)}</li>`).join("")}
-      </ul>
-    </div>
-  `;
+      <div style="background: #E3F2FD; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid #2196F3;">
+        <h3 style="color: #1565C0; font-weight: bold; margin-bottom: 10px;">💡 نصائح DealGuard</h3>
+        <ul style="margin: 0; padding-right: 20px; color: #555;">
+          ${tips.map(tip => `<li style="margin: 8px 0;">${escapeHtml(tip)}</li>`).join("")}
+        </ul>
+      </div>
 
-  html += `
-    <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; font-size: 12px; color: #666; font-family: monospace;">
-      <div style="margin-bottom: 8px;"><strong>معرف القضية:</strong> ${escapeHtml(caseId)}</div>
-      <div><strong>رقم المعاملة:</strong> ${escapeHtml(txHash)}</div>
-    </div>
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; font-size: 12px; color: #666; font-family: monospace;">
+        <div style="margin-bottom: 8px;"><strong>معرف القضية:</strong> ${escapeHtml(caseId)}</div>
+        <div><strong>رقم المعاملة:</strong> ${escapeHtml(txHash)}</div>
+      </div>
     </div>
   `;
 
@@ -264,8 +264,8 @@ function displayResult(result, verdict, caseId, txHash) {
   console.log("✓ تم عرض النتيجة بنجاح");
 }
 
-// ======== الدالة الرئيسية (محسّنة) ========
-window.verifyDeal = async function () {
+// ======== الدالة الرئيسية ========
+window.verifyDeal = async function() {
   console.log("=== بدأ التحقق ===");
   
   hideError();
@@ -300,7 +300,7 @@ window.verifyDeal = async function () {
   }
 
   let progressTimer = null;
-
+  
   try {
     // 1. الاتصال
     updateStatus(STAGE_MESSAGES.CONNECTING, 8);
@@ -336,7 +336,6 @@ window.verifyDeal = async function () {
     // 3. إنشاء العميل
     updateStatus(STAGE_MESSAGES.PREPARING, 22);
     const client = createClient({ chain: studionet, account, provider });
-    
     const caseId = createCaseId();
     console.log("معرف القضية:", caseId);
 
@@ -350,30 +349,29 @@ window.verifyDeal = async function () {
     });
     console.log("رقم المعاملة:", txHash);
 
-    // 5. انتظار القرار (محسّن)
+    // 5. انتظار القرار
     updateStatus(STAGE_MESSAGES.WAITING_DECISION, 40);
-
-    // تحديث تدريجي للنسبة أثناء الانتظار
     let currentProgress = 40;
     progressTimer = setInterval(() => {
       currentProgress = Math.min(70, currentProgress + 1);
       updateStatus(STAGE_MESSAGES.WAITING_DECISION, currentProgress);
-    }, 2500);
+    }, 3000);
 
     const transaction = await client.waitForTransactionReceipt({
       hash: txHash,
       waitUntil: "decided",
-      interval: 2500,   // أسرع
-      retries: 150      // ~6 دقائق كحد أقصى
+      interval: 3000,
+      retries: 120
     });
     
     clearInterval(progressTimer);
     progressTimer = null;
+    
     console.log("حالة المعاملة:", transaction);
 
-    // 6. قراءة النتيجة (محسّنة)
+    // 6. قراءة النتيجة
     updateStatus(STAGE_MESSAGES.READING_RESULT, 75);
-    const result = await readVerificationWithRetry(client, caseId, 20, 2000);
+    const result = await readVerificationWithRetry(client, caseId, 15, 3000);
     
     if (!result) {
       throw new Error("لم يتم الحصول على نتيجة من العقد الذكي. حاول مرة أخرى بعد قليل.");
@@ -381,7 +379,6 @@ window.verifyDeal = async function () {
 
     console.log("النتيجة:", result);
 
-    // 7. عرض النتيجة
     const verdict = result.verdict;
     if (!["SAFE", "RISKY", "HIGH_RISK"].includes(verdict)) {
       throw new Error("النتيجة غير صالحة: " + verdict);
